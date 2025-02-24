@@ -9,16 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.750.0",
+    "@aws-sdk/credential-providers": "^3.750.0",
+    "aws-sdk": "^2.1692.0",
+    "axios": "^1.7.9",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.1",
+    "next": "15.1.7",
+    "openai": "^4.85.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.1.7"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
