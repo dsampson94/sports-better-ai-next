@@ -21,6 +21,7 @@ export default function DashboardPage() {
                 console.error("Failed to load fixtures:", err);
             }
         }
+
         fetchFixtures();
     }, []);
 
