@@ -1,5 +1,5 @@
 {
   "functions": {
-    "api/analysis": { "maxDuration": 10 }
+    "app/api/analysis/route": { "maxDuration": 10 }
   }
 }
