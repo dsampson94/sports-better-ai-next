@@ -12,8 +12,6 @@ export default function DashboardPage() {
     const [query, setQuery] = useState("");
     const [result, setResult] = useState<any>(null);
     const [loading, setLoading] = useState(false);
-    const [fixtures, setFixtures] = useState<any>(null);
-    const [source, setSource] = useState<string>("");
 
     // For user profile
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -46,21 +44,6 @@ export default function DashboardPage() {
         fetchUserProfile();
     }, []);
 
-    // 2) Fetch sports fixtures
-    useEffect(() => {
-        async function fetchFixtures() {
-            try {
-                const res = await fetch("/api/sports/fixtures");
-                const data = await res.json();
-                setFixtures(data.fixtures);
-                setSource(data.source);
-            } catch (err) {
-                console.error("Failed to load fixtures:", err);
-            }
-        }
-        fetchFixtures();
-    }, []);
-
     // 3) Analyze
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
@@ -80,7 +63,7 @@ export default function DashboardPage() {
             const res = await fetch("/api/analysis", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userInput: query, sportsData: fixtures }),
+                body: JSON.stringify({ userInput: query }),
             });
             const data = await res.json();
             setResult(data);
@@ -219,15 +202,6 @@ export default function DashboardPage() {
                         <div className="bg-red-700 p-2 rounded mb-4 text-red-100">
                             {errorMsg}
                         </div>
-                    )}
-
-                    {fixtures ? (
-                        <div className="bg-gray-800 p-4 rounded mb-4">
-                            <h3 className="text-sm text-gray-400">Data Source: {source}</h3>
-                            {/* Render your fixtures... */}
-                        </div>
-                    ) : (
-                        <p className="text-gray-400">Loading fixtures...</p>
                     )}
 
                     <form onSubmit={handleAnalyze} className="space-y-4">
