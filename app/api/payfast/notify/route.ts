@@ -1,61 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import connectToDatabase from '../../../lib/mongoose';
-import User from '../../../lib/models/User';
+import connectToDatabase from "../../../lib/mongoose";
+import User from "../../../lib/models/User";
+import querystring from "querystring";
+
+// Disable Next.js body parsing so we can handle x-www-form-urlencoded data
+export const config = {
+    api: {
+        bodyParser: false,
+        externalResolver: true,
+    },
+};
 
 export async function POST(req: NextRequest) {
     try {
-        // ✅ 1. Parse PayFast response
-        const formData = await req.formData();
-        const data: Record<string, string> = {};
-        formData.forEach((value, key) => {
-            data[key] = value.toString();
-        });
+        // Log that the notify route was hit
+        console.log("🚀 Notify route called");
 
-        console.log("🔔 PayFast Notification Received:", data);
+        // Read the raw request body as text
+        const rawBody = await req.text();
+        console.log("🔔 Raw ITN Data:", rawBody);
 
-        // ✅ 2. Verify Signature (Security Step)
-        const payfastPassphrase = process.env.PAYFAST_PASSPHRASE!;
-        const expectedSignature = generateSignature(data, payfastPassphrase);
+        // Parse the raw body (x-www-form-urlencoded)
+        const data = querystring.parse(rawBody) as Record<string, string>;
+        console.log("✅ Parsed ITN Data:", data);
+
+        // Verify PayFast signature
+        const passphrase = process.env.PAYFAST_PASSPHRASE || "";
+        const expectedSignature = generateSignature(data, passphrase);
         if (data.signature !== expectedSignature) {
-            console.error("❌ Invalid signature received from PayFast");
-            return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+            console.error("❌ Invalid signature. Expected:", expectedSignature, "Received:", data.signature);
+            // Return 200 OK even on error to prevent PayFast retries
+            return NextResponse.json({ error: "Invalid signature" }, { status: 200 });
         }
 
-        // ✅ 3. Ensure Payment Was Successful
+        // Ensure payment status is COMPLETE
         if (data.payment_status !== "COMPLETE") {
             console.error("❌ Payment not completed:", data.payment_status);
-            return NextResponse.json({ error: "Payment not completed" }, { status: 400 });
+            return NextResponse.json({ error: "Payment not completed" }, { status: 200 });
         }
 
-        // ✅ 4. Find User by Email (or Custom ID in `custom_str1`)
+        // Connect to your database
         await connectToDatabase();
-        const user = await User.findOne({ email: data.email_address });
 
+        // Identify the user.
+        // IMPORTANT: Ensure your notify form passes a reliable identifier.
+        // Here we use email_address, but you might consider a custom field.
+        const user = await User.findOne({ email: data.email_address });
         if (!user) {
-            console.error("❌ User not found:", data.email_address);
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
+            console.error("❌ User not found for email:", data.email_address);
+            return NextResponse.json({ error: "User not found" }, { status: 200 });
         }
 
-        // ✅ 5. Update User’s Balance
-        const amount = parseFloat(data.amount);
-        user.balance = (user.balance ?? 0) + amount; // Ensure balance exists
+        // Parse the amount that was paid. (PayFast sends amounts as decimals.)
+        const amountPaid = parseFloat(data.amount_gross);
+        if (isNaN(amountPaid)) {
+            console.error("❌ Invalid amount_gross:", data.amount_gross);
+            return NextResponse.json({ error: "Invalid amount" }, { status: 200 });
+        }
+
+        // Update user's balance
+        user.balance = (user.balance || 0) + amountPaid;
         await user.save();
 
         console.log(`✅ Updated balance for ${user.email}: New Balance = ${user.balance}`);
 
-        return NextResponse.json({ success: true });
+        // Return HTTP 200 to acknowledge receipt of ITN
+        return NextResponse.json({ success: true }, { status: 200 });
     } catch (error: any) {
-        console.error("❌ Error handling PayFast IPN:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("❌ Error handling PayFast ITN:", error);
+        return NextResponse.json({ error: error.message }, { status: 200 });
     }
 }
 
-// ✅ Signature Generator for PayFast
+// Helper: Generate PayFast signature
 function generateSignature(data: Record<string, string>, passphrase: string) {
+    // Build parameter string from all non-empty keys (excluding 'signature')
+    // NOTE: PayFast docs recommend using alphabetical order here.
     let paramString = Object.keys(data)
         .filter((key) => key !== "signature" && data[key])
-        .map((key) => `${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}`)
+        .sort()
+        .map((key) => {
+            // Use encodeURIComponent and replace %20 with +
+            return `${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}`;
+        })
         .join("&");
 
     if (passphrase) {
