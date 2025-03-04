@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
             notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payfast/notify`,
             name_first: "John",
             name_last: "Doe",
-            email_address: "davesampson15@gmail.com",
+            email_address: "deltaalphavids@gmail.com",
             m_payment_id: orderId || "unique-order-id",
             amount: Number(amount).toFixed(2),
             item_name: itemName || "Test Product",
