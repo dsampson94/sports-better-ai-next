@@ -11,7 +11,7 @@ export function useAnalysis() {
         setError("");
 
         try {
-            // Step 1: Call web-search endpoint to fetch sports data from Perplexity
+            // Step 1: Call web-search endpoint (Perplexity)
             const webSearchRes = await fetch("/api/analysis/web-search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -19,9 +19,9 @@ export function useAnalysis() {
             });
             const webSearchData = await webSearchRes.json();
             if (webSearchData.error) throw new Error(webSearchData.error);
-            const perplexityData = webSearchData.perplexityData; // array of strings
+            const perplexityData = webSearchData.perplexityData;
 
-            // Step 2: Call response-analysis endpoint with userInput and perplexityData
+            // Step 2: Call response-analysis endpoint (multiple AI models)
             const responseAnalysisRes = await fetch("/api/analysis/response-analysis", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -29,9 +29,9 @@ export function useAnalysis() {
             });
             const responseAnalysisData = await responseAnalysisRes.json();
             if (responseAnalysisData.error) throw new Error(responseAnalysisData.error);
-            const partialResponses = responseAnalysisData.partialResponses; // array of partial responses
+            const partialResponses = responseAnalysisData.partialResponses;
 
-            // Step 3: Call analysis-aggregator endpoint to merge responses, apply cost logic, and generate final answer
+            // Step 3: Call analysis-aggregator endpoint (final aggregation)
             const aggregatorRes = await fetch("/api/analysis/analysis-aggregator", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -39,6 +39,24 @@ export function useAnalysis() {
             });
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
+
+            // Step 4: Update the user's usage (free call count or deduct $0.50) in the DB
+            const updateRes = await fetch("/api/user/update-usage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+            const updateData = await updateRes.json();
+            if (updateData.error) {
+                // Log a warning and proceed (or handle this case as needed)
+                console.warn("Warning: Failed to update usage:", updateData.error);
+            }
+            // Merge updated usage info into the aggregator data
+            if (updateData.updatedBalance !== undefined) {
+                aggregatorData.updatedBalance = updateData.updatedBalance;
+            }
+            if (updateData.freePredictionCount !== undefined) {
+                aggregatorData.freePredictionCount = updateData.freePredictionCount;
+            }
 
             setFinalResult(aggregatorData);
         } catch (e: any) {

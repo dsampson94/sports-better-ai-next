@@ -7,6 +7,7 @@ interface UserProfile {
     email: string;
     username?: string;
     balance?: number;
+    freePredictionCount?: number;
 }
 
 export default function DashboardPage() {
@@ -16,10 +17,9 @@ export default function DashboardPage() {
     const [profileLoading, setProfileLoading] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
 
-    // Use our custom hook to perform analysis
     const { finalResult, loading, error, analyze } = useAnalysis();
 
-    // 1) Fetch user data on mount
+    // Fetch user profile on mount
     useEffect(() => {
         async function fetchUserProfile() {
             try {
@@ -42,24 +42,27 @@ export default function DashboardPage() {
         fetchUserProfile();
     }, []);
 
-    // 2) Handle analysis submission using the hook
+    // Handle analysis submission only if free calls remain or if user has enough balance
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
         setErrorMsg("");
-        await analyze(query);
 
-        // Optionally update user profile with new balance if aggregator returns updatedBalance:
-        // if (finalResult?.updatedBalance) {
-        //   setUserProfile((prev) =>
-        //     prev ? { ...prev, balance: finalResult.updatedBalance } : prev
-        //   );
-        // }
+        // Check: if freePredictionCount is >= 3, user must have at least $0.50
+        const freeCalls = userProfile?.freePredictionCount ?? 0;
+        const balance = userProfile?.balance ?? 0;
+        const costPerCall = 0.50;
+        if (freeCalls >= 3 && balance < costPerCall) {
+            setErrorMsg("You have used your free predictions and do not have enough dollars. Please add credits.");
+            return;
+        }
+
+        await analyze(query);
     }
 
-    // 3) "Add Credits" – calls /api/payfast/pay-now to generate a form submission to add funds
+    // Handle add credits: navigates to pay portal via /api/payfast/pay-now endpoint.
     async function handleAddCredits() {
         try {
-            const amount = 100.0; // e.g. top up 100 dollars
+            const amount = 100.0; // Top up 100 dollars as an example
             const res = await fetch("/api/payfast/pay-now", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -71,7 +74,7 @@ export default function DashboardPage() {
             const data = await res.json();
             if (data.error) throw new Error(data.error);
 
-            // Build and auto-submit a hidden form to redirect to the payment gateway
+            // Build hidden form and auto-submit to redirect to the payment portal
             const form = document.createElement("form");
             form.method = "POST";
             form.action = data.actionUrl;
@@ -114,6 +117,9 @@ export default function DashboardPage() {
                                     <p className="text-gray-300 text-xs">
                                         Credits: {userProfile.balance ?? 0}
                                     </p>
+                                    <p className="text-gray-300 text-xs">
+                                        Free Calls Used: {userProfile.freePredictionCount ?? 0} / 3
+                                    </p>
                                 </div>
                                 <svg
                                     className="w-4 h-4 text-gray-300"
@@ -122,7 +128,11 @@ export default function DashboardPage() {
                                     strokeWidth={2}
                                     viewBox="0 0 24 24"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M19 9l-7 7-7-7"
+                                    />
                                 </svg>
                             </button>
                             {showMenu && (
@@ -152,14 +162,18 @@ export default function DashboardPage() {
             {/* MAIN CONTENT */}
             <main className="flex-1 p-4">
                 <div className="max-w-xl mx-auto">
-                    <h2 className="text-2xl font-semibold mb-4">AI Sports Predictions ⚽🏀🎾</h2>
+                    <h2 className="text-2xl font-semibold mb-4">
+                        AI Sports Predictions ⚽🏀🎾
+                    </h2>
                     <p className="mb-4 text-gray-400">
-                        Enter your query about upcoming matches. Our AI compares multiple models and provides the{" "}
-                        <strong>best synthesized prediction</strong>.
+                        Enter your query about upcoming matches. Our AI compares multiple models
+                        and provides the <strong>best synthesized prediction</strong>.
                     </p>
 
                     {errorMsg && (
-                        <div className="bg-red-700 p-2 rounded mb-4 text-red-100">{errorMsg}</div>
+                        <div className="bg-red-700 p-2 rounded mb-4 text-red-100">
+                            {errorMsg}
+                        </div>
                     )}
 
                     <form onSubmit={handleAnalyze} className="space-y-4">
@@ -170,13 +184,23 @@ export default function DashboardPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
             />
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold w-full"
-                        >
-                            {loading ? "Analyzing..." : "Get AI Prediction"}
-                        </button>
+                        {((userProfile?.freePredictionCount ?? 0) < 3 || (userProfile?.freePredictionCount ?? 0) >= 3 && (userProfile?.balance ?? 0) >= 0.50) ? (
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold w-full"
+                            >
+                                {loading ? "Analyzing..." : "Get AI Prediction"}
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleAddCredits}
+                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-semibold w-full"
+                            >
+                                Add Credits
+                            </button>
+                        )}
                     </form>
 
                     {/* RESULT SECTION */}
@@ -195,7 +219,6 @@ export default function DashboardPage() {
                                             {finalResult.finalAnswer}
                                         </p>
                                     </div>
-
                                     <div className="bg-gray-900 p-3 rounded border border-gray-700">
                                         <h3 className="text-lg font-bold mb-2 text-blue-400">
                                             🤖 AI Model Responses
