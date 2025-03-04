@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
             notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payfast/notify`,
             name_first: "John",
             name_last: "Doe",
-            email_address: "john.doe@example.com",
+            email_address: "davesampson15@gmail.com",
             m_payment_id: orderId || "unique-order-id",
             amount: Number(amount).toFixed(2),
             item_name: itemName || "Test Product",
@@ -31,8 +31,7 @@ export async function POST(req: NextRequest) {
         };
 
         // 3) Generate the signature in strict PayFast param order
-        const signature = generateSignature(data, passphrase);
-        data.signature = signature;
+        data.signature = generateSignature(data, passphrase);
 
         // 4) Construct the correct URL
         const payfastHost = testingMode
