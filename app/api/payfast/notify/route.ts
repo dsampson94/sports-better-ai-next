@@ -14,14 +14,13 @@ export const config = {
 
 export async function POST(req: NextRequest) {
     try {
-        // Log that the notify route was hit
         console.log("🚀 Notify route called");
 
-        // Read the raw request body as text
+        // Read the raw request body (PayFast sends form data)
         const rawBody = await req.text();
         console.log("🔔 Raw ITN Data:", rawBody);
 
-        // Parse the raw body (x-www-form-urlencoded)
+        // Parse the raw body into an object
         const data = querystring.parse(rawBody) as Record<string, string>;
         console.log("✅ Parsed ITN Data:", data);
 
@@ -30,42 +29,32 @@ export async function POST(req: NextRequest) {
         const expectedSignature = generateSignature(data, passphrase);
         if (data.signature !== expectedSignature) {
             console.error("❌ Invalid signature. Expected:", expectedSignature, "Received:", data.signature);
-            // Return 200 OK even on error to prevent PayFast retries
             return NextResponse.json({ error: "Invalid signature" }, { status: 200 });
         }
 
-        // Ensure payment status is COMPLETE
+        // Ensure payment was successful
         if (data.payment_status !== "COMPLETE") {
             console.error("❌ Payment not completed:", data.payment_status);
             return NextResponse.json({ error: "Payment not completed" }, { status: 200 });
         }
 
-        // Connect to your database
+        // Connect to the database
         await connectToDatabase();
 
-        // Identify the user.
-        // IMPORTANT: Ensure your notify form passes a reliable identifier.
-        // Here we use email_address, but you might consider a custom field.
-        const user = await User.findOne({ email: data.email_address });
-        if (!user) {
-            console.error("❌ User not found for email:", data.email_address);
-            return NextResponse.json({ error: "User not found" }, { status: 200 });
-        }
-
-        // Parse the amount that was paid. (PayFast sends amounts as decimals.)
+        // Parse the amount from PayFast; they send amount_gross as the full amount paid.
         const amountPaid = parseFloat(data.amount_gross);
         if (isNaN(amountPaid)) {
             console.error("❌ Invalid amount_gross:", data.amount_gross);
             return NextResponse.json({ error: "Invalid amount" }, { status: 200 });
         }
 
-        // Update user's balance
-        user.balance = (user.balance || 0) + amountPaid;
-        await user.save();
+        // Atomically update the user's balance using $inc operator
+        const updateResult = await User.updateOne(
+            { email: data.email_address }, // Ensure the ITN sends the correct email
+            { $inc: { balance: amountPaid } }
+        );
+        console.log("✅ Update Result:", updateResult);
 
-        console.log(`✅ Updated balance for ${user.email}: New Balance = ${user.balance}`);
-
-        // Return HTTP 200 to acknowledge receipt of ITN
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (error: any) {
         console.error("❌ Error handling PayFast ITN:", error);
@@ -73,21 +62,13 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function GET(req: NextRequest) {
-    console.log("GET request to /api/payfast/notify");
-    console.log({req});
-    return NextResponse.json({ message: "GET method not supported" }, { status: 405 });
-}
-
-// Helper: Generate PayFast signature
+// Helper function to generate PayFast signature
 function generateSignature(data: Record<string, string>, passphrase: string) {
-    // Build parameter string from all non-empty keys (excluding 'signature')
-    // NOTE: PayFast docs recommend using alphabetical order here.
     let paramString = Object.keys(data)
         .filter((key) => key !== "signature" && data[key])
-        .sort()
+        .sort() // Sorting keys alphabetically per PayFast requirements
         .map((key) => {
-            // Use encodeURIComponent and replace %20 with +
+            // Encode and replace spaces with '+'
             return `${key}=${encodeURIComponent(data[key].trim()).replace(/%20/g, "+")}`;
         })
         .join("&");
