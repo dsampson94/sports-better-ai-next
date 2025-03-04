@@ -37,7 +37,7 @@ ${ perplexityResponses[1] || 'No data available' }
 `;
 
 // Define the AI models with updated prompt structure
-export const modelRegistry: ModelDefinition[] = [
+export const AnalysisModelRegistry: ModelDefinition[] = [
     {
         id: 'perplexity',
         name: 'Perplexity AI',

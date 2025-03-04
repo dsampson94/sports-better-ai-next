@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { modelRegistry } from '../../lib/modelRegistry';
+import { AnalysisModelRegistry } from '../../lib/analysisModelRegistry';
 import { callGPT4Aggregator } from '../../lib/aggregatorGPT4';
 import jwt from 'jsonwebtoken';
 import connectToDatabase from '../../lib/mongoose';
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         const liveSportsData = liveSportsDataArr.join("\n\n");
 
         // 🚀 **Call enabled AI models to analyze Perplexity AI data**
-        const enabledModels = modelRegistry.filter((m) => m.enabled);
+        const enabledModels = AnalysisModelRegistry.filter((m) => m.enabled);
         if (enabledModels.length === 0) {
             return NextResponse.json({ error: "No AI models enabled" }, { status: 500 });
         }
