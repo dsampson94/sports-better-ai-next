@@ -73,6 +73,12 @@ export async function POST(req: NextRequest) {
     }
 }
 
+export async function GET(req: NextRequest) {
+    console.log("GET request to /api/payfast/notify");
+    console.log({req});
+    return NextResponse.json({ message: "GET method not supported" }, { status: 405 });
+}
+
 // Helper: Generate PayFast signature
 function generateSignature(data: Record<string, string>, passphrase: string) {
     // Build parameter string from all non-empty keys (excluding 'signature')
