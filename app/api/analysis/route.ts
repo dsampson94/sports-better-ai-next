@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { modelRegistry } from '../../lib/modelRegistry';
 import { callGPT4Aggregator } from '../../lib/aggregatorGPT4';
+import jwt from 'jsonwebtoken';
+import connectToDatabase from '../../lib/mongoose';
+import User from '../../lib/models/User';
 
 /**
  * Fetches real-time sports betting data from Perplexity AI.
@@ -79,6 +82,31 @@ Your **ONLY** job is to deliver **crystal-clear betting intelligence** across AL
  */
 export async function POST(req: NextRequest) {
     try {
+        // ===== Begin Added Costing Logic =====
+        // Authenticate user and connect to database
+        const token = req.cookies.get("sportsbet_token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        let decoded: any;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET!);
+        } catch (err) {
+            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+        }
+        await connectToDatabase();
+        const user = await User.findOne({ email: decoded.email });
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+        // Costing: first 3 predictions are free; after that, each prediction costs $0.50.
+        const freeCount = user.freePredictionCount || 0;
+        const cost = freeCount < 3 ? 0 : 0.50;
+        if (cost > 0 && (user.balance || 0) < cost) {
+            return NextResponse.json({ error: "Insufficient balance. Please add more dollars." }, { status: 400 });
+        }
+        // ===== End Added Costing Logic =====
+
         const { userInput } = await req.json();
         if (!userInput) {
             return NextResponse.json({ error: "No userInput provided" }, { status: 400 });
@@ -119,7 +147,15 @@ export async function POST(req: NextRequest) {
         // 🚀 **Call GPT-4 Aggregator to generate the final best response**
         const finalAnswer = await callGPT4Aggregator(combinedText, liveSportsData);
 
-        return NextResponse.json({ partialResponses: results, finalAnswer });
+        // Update user: increment free prediction count if free predictions remain, otherwise deduct cost.
+        if (freeCount < 3) {
+            user.freePredictionCount = freeCount + 1;
+        } else {
+            user.balance = (user.balance || 0) - cost;
+        }
+        await user.save();
+
+        return NextResponse.json({ partialResponses: results, finalAnswer, updatedBalance: user.balance, freePredictionCount: user.freePredictionCount });
     } catch (err: any) {
         console.error("❌ **Analysis Route Error:**", err);
         return NextResponse.json({ error: "Internal server error in analysis route" }, { status: 500 });

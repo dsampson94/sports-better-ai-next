@@ -83,74 +83,74 @@ export const modelRegistry: ModelDefinition[] = [
             return data.choices?.[0]?.message?.content || 'No GPT-3.5 response';
         },
     },
-    {
-        id: 'claude',
-        name: 'Anthropic Claude',
-        enabled: true,
-        call: async (userInput: string, perplexityResponses: string[]) => {
-            const prompt = sharedPromptTemplate(userInput, perplexityResponses);
-
-            const res = await fetch('https://api.anthropic.com/v1/complete', {
-                method: 'POST',
-                headers: {
-                    'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    prompt: `\n\nHuman: ${ prompt }\n\nAssistant:`,
-                    model: 'claude-v1.3',
-                    max_tokens_to_sample: 500,
-                    temperature: 0.7,
-                }),
-            });
-
-            const data = await res.json();
-            return data.completion || 'No Claude response';
-        },
-    },
-    {
-        id: 'deepseek',
-        name: 'DeepSeek',
-        enabled: true,
-        call: async (userInput: string, perplexityResponses: string[]) => {
-            const prompt = sharedPromptTemplate(userInput, perplexityResponses);
-
-            const res = await fetch('https://api.deepseek.ai/v1/query', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${ process.env.DEEPSEEK_API_KEY }`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query: prompt }),
-            });
-
-            const data = await res.json();
-            return data.answer || data.result || 'No DeepSeek response';
-        },
-    },
-    {
-        id: 'cohere',
-        name: 'Cohere',
-        enabled: true,
-        call: async (userInput: string, perplexityResponses: string[]) => {
-            const prompt = sharedPromptTemplate(userInput, perplexityResponses);
-
-            const res = await fetch('https://api.cohere.ai/v1/generate', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${ process.env.COHERE_API_KEY }`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    model: 'command-xlarge-nightly',
-                    prompt: prompt,
-                    max_tokens: 300,
-                    temperature: 0.7,
-                }),
-            });
-
-            const data = await res.json();
-            return data.generations?.[0]?.text || 'No Cohere response';
-        },
-    },
+    // {
+    //     id: 'claude',
+    //     name: 'Anthropic Claude',
+    //     enabled: true,
+    //     call: async (userInput: string, perplexityResponses: string[]) => {
+    //         const prompt = sharedPromptTemplate(userInput, perplexityResponses);
+    //
+    //         const res = await fetch('https://api.anthropic.com/v1/complete', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '',
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 prompt: `\n\nHuman: ${ prompt }\n\nAssistant:`,
+    //                 model: 'claude-v1.3',
+    //                 max_tokens_to_sample: 500,
+    //                 temperature: 0.7,
+    //             }),
+    //         });
+    //
+    //         const data = await res.json();
+    //         return data.completion || 'No Claude response';
+    //     },
+    // },
+    // {
+    //     id: 'deepseek',
+    //     name: 'DeepSeek',
+    //     enabled: true,
+    //     call: async (userInput: string, perplexityResponses: string[]) => {
+    //         const prompt = sharedPromptTemplate(userInput, perplexityResponses);
+    //
+    //         const res = await fetch('https://api.deepseek.ai/v1/query', {
+    //             method: 'POST',
+    //             headers: {
+    //                 Authorization: `Bearer ${ process.env.DEEPSEEK_API_KEY }`,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({ query: prompt }),
+    //         });
+    //
+    //         const data = await res.json();
+    //         return data.answer || data.result || 'No DeepSeek response';
+    //     },
+    // },
+    // {
+    //     id: 'cohere',
+    //     name: 'Cohere',
+    //     enabled: true,
+    //     call: async (userInput: string, perplexityResponses: string[]) => {
+    //         const prompt = sharedPromptTemplate(userInput, perplexityResponses);
+    //
+    //         const res = await fetch('https://api.cohere.ai/v1/generate', {
+    //             method: 'POST',
+    //             headers: {
+    //                 Authorization: `Bearer ${ process.env.COHERE_API_KEY }`,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 model: 'command-xlarge-nightly',
+    //                 prompt: prompt,
+    //                 max_tokens: 300,
+    //                 temperature: 0.7,
+    //             }),
+    //         });
+    //
+    //         const data = await res.json();
+    //         return data.generations?.[0]?.text || 'No Cohere response';
+    //     },
+    // },
 ];

@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, model, models, Schema } from 'mongoose';
 
-interface IUser extends Document {
+export interface IUser extends Document {
     _id: mongoose.Types.ObjectId;
     username: string;
     email: string;
@@ -11,6 +11,7 @@ interface IUser extends Document {
     subscriptionStatus?: string;
     subscriptionPlan?: string;
     usageCountThisMonth?: number;
+    freePredictionCount?: number;  // New field to track free predictions
 }
 
 const UserSchema: Schema<IUser> = new Schema({
@@ -30,9 +31,9 @@ const UserSchema: Schema<IUser> = new Schema({
     subscriptionStatus: { type: String, default: 'inactive' },
     subscriptionPlan: { type: String, default: 'none' },
     usageCountThisMonth: { type: Number, default: 0 },
+    freePredictionCount: { type: Number, default: 0 }, // New field with default 0
 }, { timestamps: true });
 
 const User: Model<IUser> = models.User || model<IUser>('User', UserSchema);
 
-export type { IUser };
 export default User;
