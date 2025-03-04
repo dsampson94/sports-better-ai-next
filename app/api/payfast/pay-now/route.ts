@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
         const data: Record<string, string> = {
             merchant_id: merchantId,
             merchant_key: merchantKey,
-            return_url: `http://localhost:3000/dashboard?payment=success`, // Update this
-            cancel_url: `http://localhost:3000/dashboard?payment=cancel`, // Update this
-            notify_url: `https://floppy-stars-enjoy.loca.lt/api/payfast/notify`,
+            return_url: `https://sports-better-ai-next-fetnnwkn8-saas-team-six.vercel.app/dashboard?payment=success`, // Update this
+            cancel_url: `https://sports-better-ai-next-fetnnwkn8-saas-team-six.vercel.app/dashboard?payment=cancel`, // Update this
+            notify_url: `https://sports-better-ai-next-fetnnwkn8-saas-team-six.vercel.app/api/payfast/notify`,
             name_first: "John",
             name_last: "Doe",
             email_address: "john.doe@example.com",
