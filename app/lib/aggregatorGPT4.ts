@@ -10,7 +10,7 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
 - NO fabrications—only enhance and refine what is provided.
 
 🚀 STRICT RULES:
-- Be precise & direct—less is more but still explain your opinions and choices.
+- Be precise & direct—less is more but still explain your opinions and choices. Make each emoji bullet point at least 2 sentences.
 - Make it visually engaging but professional.
 - Follow the exact format below for each game. EACH GAME MUST HAVE ANALYSIS IN THE FORMAT MENTIONED BELOW. - IMPORTANT.
 
