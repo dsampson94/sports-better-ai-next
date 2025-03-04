@@ -14,7 +14,14 @@ interface IUser extends Document {
 }
 
 const UserSchema: Schema<IUser> = new Schema({
-    username: { type: String, required: false },
+    username: {
+        type: String,
+        required: false,
+        unique: false,
+        default: function() {
+            return this.email ? this.email.split("@")[0] : "user_" + Math.random().toString(36).slice(2, 11);
+        }
+    },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: false },
     role: { type: String, enum: ['USER', 'ADMIN'], default: 'USER' },
