@@ -16,15 +16,22 @@ export async function POST(req: NextRequest) {
     try {
         console.log("🚀 Notify route called");
 
-        // Read raw body
+        // Read raw ITN data as text (PayFast sends x-www-form-urlencoded)
         const rawBody = await req.text();
         console.log("🔔 Raw ITN Data:", rawBody);
 
-        // Parse form data
+        // Parse the raw body into an object
         const data = querystring.parse(rawBody) as Record<string, string>;
         console.log("✅ Parsed ITN Data:", data);
 
-        // Verify signature using updated generator that includes empty fields
+        // Check that email_address is present
+        if (!data.email_address) {
+            console.error("❌ Missing email_address in ITN data");
+            return NextResponse.json({ error: "Missing email_address" }, { status: 200 });
+        }
+        console.log("✅ Retrieved email:", data.email_address);
+
+        // Verify PayFast signature
         const passphrase = process.env.PAYFAST_PASSPHRASE || "";
         const expectedSignature = generateSignature(data, passphrase);
         if (data.signature !== expectedSignature) {
@@ -32,31 +39,35 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid signature" }, { status: 200 });
         }
 
-        // Ensure payment status is COMPLETE
+        // Ensure payment was successful
         if (data.payment_status !== "COMPLETE") {
             console.error("❌ Payment not completed:", data.payment_status);
             return NextResponse.json({ error: "Payment not completed" }, { status: 200 });
         }
 
-        // Connect to DB and update user's balance
+        // Connect to the database
         await connectToDatabase();
+
+        // Find the user by the email address provided
         const user = await User.findOne({ email: data.email_address });
         if (!user) {
             console.error("❌ User not found for email:", data.email_address);
             return NextResponse.json({ error: "User not found" }, { status: 200 });
         }
 
+        // Parse the paid amount from amount_gross
         const amountPaid = parseFloat(data.amount_gross);
         if (isNaN(amountPaid)) {
             console.error("❌ Invalid amount_gross:", data.amount_gross);
             return NextResponse.json({ error: "Invalid amount" }, { status: 200 });
         }
 
+        // Update user's balance
         user.balance = (user.balance || 0) + amountPaid;
         await user.save();
-
         console.log(`✅ Updated balance for ${user.email}: New Balance = ${user.balance}`);
 
+        // Respond with HTTP 200 OK to acknowledge receipt of ITN
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (error: any) {
         console.error("❌ Error handling PayFast ITN:", error);
@@ -64,9 +75,8 @@ export async function POST(req: NextRequest) {
     }
 }
 
-// Updated Signature Generator using a fixed parameter order and including empty values
+// Helper: Generate PayFast signature using fixed parameter order including empty fields
 function generateSignature(data: Record<string, string>, passphrase: string) {
-    // Fixed order per PayFast ITN docs
     const paramOrder = [
         "m_payment_id",
         "pf_payment_id",
@@ -94,21 +104,15 @@ function generateSignature(data: Record<string, string>, passphrase: string) {
 
     let paramString = "";
     for (const key of paramOrder) {
-        // Always include the key even if its value is empty.
+        // Always include key even if its value is empty
         const value = data[key] || "";
-        // encode using encodeURIComponent and replace %20 with +
         paramString += `${key}=${encodeURIComponent(value.trim()).replace(/%20/g, "+")}&`;
     }
-
-    // Remove trailing ampersand
     if (paramString.endsWith("&")) {
         paramString = paramString.slice(0, -1);
     }
-
-    // Append passphrase (if exists)
     if (passphrase) {
         paramString += `&passphrase=${encodeURIComponent(passphrase.trim()).replace(/%20/g, "+")}`;
     }
-
     return crypto.createHash("md5").update(paramString).digest("hex");
 }
