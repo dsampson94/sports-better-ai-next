@@ -47,8 +47,9 @@ ${sportsData}
         const res = await fetch("https://api.perplexity.ai/chat/completions", {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Authorization': `Bearer ${ process.env.PERPLEXITY_API_KEY }`,
                 'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify({
                 model: "sonar-pro",
