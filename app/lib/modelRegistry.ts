@@ -28,8 +28,9 @@ ${ perplexityResponses[1] || 'No data available' }
 - **Final Prediction:** Offer a strong **best bet recommendation** based on expert insights.
 
 ⚠️ **Important:**  
-- **DO NOT fabricate stats or teams**—use only the provided data.
-- **DO NOT hold back—predict like a champ.** 
+- **DO NOT fabricate stats or teams**—use only the provided data and do web searches to validate the information.
+- **DO NOT hold back—predict like a champ and use multiple data sources online, like https://supersport.com/.** 
+- FACT CHECK EVERYTHING AND ENSURE THE INPUT DATA IS ACCURATE AND CORRECT BY SEARCHING AND CHECKING THE WEB. 
 - **THE USER DOES NOT SEE THIS - IT GOES TO THE NEXT LLM FOR FURTHER ANALYSIS PLEASE MINIMIZE TOKEN USAGE AND BE PRECISE **  
 - **DO NOT say "I cannot predict"**—always provide the most **likely outcome** based on given insights.
 - **Ensure clarity, bold key information, and use structured formatting.**
@@ -38,51 +39,75 @@ ${ perplexityResponses[1] || 'No data available' }
 // Define the AI models with updated prompt structure
 export const modelRegistry: ModelDefinition[] = [
     {
-        id: 'gpt4',
-        name: 'OpenAI GPT-4',
+        id: 'perplexity',
+        name: 'Perplexity AI',
         enabled: true,
         call: async (userInput: string, perplexityResponses: string[]) => {
             const prompt = sharedPromptTemplate(userInput, perplexityResponses);
-
-            const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            const res = await fetch('https://api.perplexity.ai/chat/completions', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${ process.env.OPENAI_API_KEY }`,
+                    Authorization: `Bearer ${ process.env.PERPLEXITY_API_KEY }`,
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4',
-                    messages: [{ role: 'user', content: prompt }],
+                    model: 'sonar-pro',
+                    messages: [
+                        { role: 'system', content: prompt }
+                    ]
                 }),
             });
-
             const data = await res.json();
-            return data.choices?.[0]?.message?.content || 'No GPT-4 response';
+            return data.choices?.[0]?.message?.content || 'No Perplexity response';
         },
     },
-    {
-        id: 'gpt35',
-        name: 'OpenAI GPT-3.5',
-        enabled: true,
-        call: async (userInput: string, perplexityResponses: string[]) => {
-            const prompt = sharedPromptTemplate(userInput, perplexityResponses);
-
-            const res = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${ process.env.OPENAI_API_KEY }`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    model: 'gpt-3.5-turbo',
-                    messages: [{ role: 'user', content: prompt }],
-                }),
-            });
-
-            const data = await res.json();
-            return data.choices?.[0]?.message?.content || 'No GPT-3.5 response';
-        },
-    },
+    // {
+    //     id: 'gpt4',
+    //     name: 'OpenAI GPT-4',
+    //     enabled: true,
+    //     call: async (userInput: string, perplexityResponses: string[]) => {
+    //         const prompt = sharedPromptTemplate(userInput, perplexityResponses);
+    //
+    //         const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    //             method: 'POST',
+    //             headers: {
+    //                 Authorization: `Bearer ${ process.env.OPENAI_API_KEY }`,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 model: 'gpt-4',
+    //                 messages: [{ role: 'user', content: prompt }],
+    //             }),
+    //         });
+    //
+    //         const data = await res.json();
+    //         return data.choices?.[0]?.message?.content || 'No GPT-4 response';
+    //     },
+    // },
+    // {
+    //     id: 'gpt35',
+    //     name: 'OpenAI GPT-3.5',
+    //     enabled: true,
+    //     call: async (userInput: string, perplexityResponses: string[]) => {
+    //         const prompt = sharedPromptTemplate(userInput, perplexityResponses);
+    //
+    //         const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    //             method: 'POST',
+    //             headers: {
+    //                 Authorization: `Bearer ${ process.env.OPENAI_API_KEY }`,
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({
+    //                 model: 'gpt-3.5-turbo',
+    //                 messages: [{ role: 'user', content: prompt }],
+    //             }),
+    //         });
+    //
+    //         const data = await res.json();
+    //         return data.choices?.[0]?.message?.content || 'No GPT-3.5 response';
+    //     },
+    // },
     // {
     //     id: 'claude',
     //     name: 'Anthropic Claude',
