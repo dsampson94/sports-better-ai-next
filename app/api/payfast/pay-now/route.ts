@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
         const data: Record<string, string> = {
             merchant_id: merchantId,
             merchant_key: merchantKey,
-            return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment=success`,  // Redirect back to dashboard
+            return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment=success`,
             cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment=cancelled`,
             notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payfast/notify`,
             name_first: "John",
