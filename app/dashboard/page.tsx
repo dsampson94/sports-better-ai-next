@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
-import { useAnalysis } from '../lib/hooks/useAnalysis';
+import { useAnalysis } from "../lib/hooks/useAnalysis";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface UserProfile {
     email: string;
@@ -19,9 +20,8 @@ export default function DashboardPage() {
     const [profileLoading, setProfileLoading] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
 
-    const { finalResult, loading, setLoading, error, analyze } = useAnalysis();
+    const { finalResult, loading, error, analyze } = useAnalysis();
 
-    // Fetch user profile on mount
     useEffect(() => {
         async function fetchUserProfile() {
             try {
@@ -35,203 +35,153 @@ export default function DashboardPage() {
                 console.error("Unauthorized access:", err);
                 router.push("/login");
             } finally {
-                setLoading(false);
+                setProfileLoading(false);
             }
         }
         fetchUserProfile();
     }, [router]);
 
-    // Handle analysis submission only if free calls remain or if user has enough balance
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
         setErrorMsg("");
 
-        // Check: if freePredictionCount is >= 3, user must have at least $0.50
         const freeCalls = userProfile?.freePredictionCount ?? 0;
         const balance = userProfile?.balance ?? 0;
         const costPerCall = 0.50;
         if (freeCalls >= 3 && balance < costPerCall) {
-            setErrorMsg("You have used your free predictions and do not have enough dollars. Please add credits.");
+            setErrorMsg("You have used your free predictions and do not have enough balance. Please add credits.");
             return;
         }
 
         await analyze(query);
     }
 
-    // Handle add credits: navigates to pay portal via /api/payfast/pay-now endpoint.
-    async function handleAddCredits() {
-        try {
-            const amount = 100.0; // Top up 100 dollars as an example
-            const res = await fetch("/api/payfast/pay-now", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    amount,
-                    itemName: `Top-up ${amount} dollars`,
-                }),
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-
-            // Build hidden form and auto-submit to redirect to the payment portal
-            const form = document.createElement("form");
-            form.method = "POST";
-            form.action = data.actionUrl;
-            for (const key in data.formData) {
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = key;
-                input.value = data.formData[key];
-                form.appendChild(input);
-            }
-            document.body.appendChild(form);
-            form.submit();
-        } catch (err: any) {
-            console.error("Add Credits Error:", err.message);
-            setErrorMsg(err.message);
-        }
-    }
-
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col">
             {/* HEADER */}
-            <header className="bg-gray-800 p-4 flex justify-between items-center relative">
-                <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
+            <motion.header
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-gray-800 p-4 flex justify-between items-center"
+            >
                 <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
-                <nav className="flex items-center space-x-4">
-                    {profileLoading ? (
-                        <span>Loading profile...</span>
-                    ) : userProfile ? (
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowMenu(!showMenu)}
-                                className="flex items-center space-x-2"
-                            >
-                                <div className="w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center text-xs">
-                                    <span>U</span>
-                                </div>
-                                <div className="text-left text-sm">
-                                    <p className="font-semibold">
-                                        {userProfile.username || userProfile.email}
-                                    </p>
-                                    <p className="text-gray-300 text-xs">
-                                        Credits: {(userProfile.balance ?? 0).toFixed(2)}
-                                    </p>
-                                    <p className="text-gray-300 text-xs">
-                                        Free Calls Used: {userProfile.freePredictionCount ?? 0} / 3
-                                    </p>
-                                </div>
-                                <svg
-                                    className="w-4 h-4 text-gray-300"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M19 9l-7 7-7-7"
-                                    />
-                                </svg>
-                            </button>
-                            {showMenu && (
-                                <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-600 text-sm rounded">
-                                    <button
-                                        onClick={handleAddCredits}
-                                        className="block w-full text-left px-4 py-2 hover:bg-gray-700"
-                                    >
-                                        Add Credits
-                                    </button>
-                                    <hr className="border-gray-600" />
-                                    <a
-                                        href="/api/auth/logout"
-                                        className="block w-full text-left px-4 py-2 hover:bg-gray-700"
-                                    >
-                                        Logout
-                                    </a>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <span className="text-red-400">No user data</span>
-                    )}
+                <nav>
+                    <a href="/api/auth/logout" className="text-red-400 hover:text-red-500 transition">Logout</a>
                 </nav>
-            </header>
+            </motion.header>
 
             {/* MAIN CONTENT */}
             <main className="flex-1 p-4">
-                <div className="max-w-xl mx-auto">
-                    <h2 className="text-2xl font-semibold mb-4">
-                        AI Sports Predictions ⚽🏀🎾
-                    </h2>
-                    <p className="mb-4 text-gray-400">
-                        Enter your query about upcoming matches. Our AI compares multiple models
-                        and provides the <strong>best synthesized prediction</strong>.
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="max-w-3xl mx-auto"
+                >
+                    <h2 className="text-3xl font-semibold mb-4 text-center text-green-400">AI Sports Predictions ⚽🏀🎾</h2>
+                    <p className="mb-4 text-gray-400 text-center">
+                        Enter your query about upcoming matches. Our AI analyzes multiple models
+                        and provides <strong>the best synthesized prediction.</strong>
                     </p>
 
                     {errorMsg && (
-                        <div className="bg-red-700 p-2 rounded mb-4 text-red-100">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-red-700 p-3 rounded mb-4 text-red-100 text-center"
+                        >
                             {errorMsg}
-                        </div>
+                        </motion.div>
                     )}
 
                     <form onSubmit={handleAnalyze} className="space-y-4">
-            <textarea
-                className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none"
-                rows={4}
-                placeholder="e.g. 'Who will likely win the next URC rugby match?'"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-            />
-                        {((userProfile?.freePredictionCount ?? 0) < 3 || (userProfile?.freePredictionCount ?? 0) >= 3 && (userProfile?.balance ?? 0) >= 0.50) ? (
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold w-full"
-                            >
-                                {loading ? "Analyzing..." : "Get AI Prediction"}
-                            </button>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={handleAddCredits}
-                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-semibold w-full"
-                            >
-                                Add Credits
-                            </button>
-                        )}
+                        <motion.textarea
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none"
+                            rows={4}
+                            placeholder="e.g. 'Who will likely win the next URC rugby match?'"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            type="submit"
+                            disabled={loading}
+                            className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold w-full"
+                        >
+                            {loading ? "Analyzing..." : "Get AI Prediction"}
+                        </motion.button>
                     </form>
 
                     {/* RESULT SECTION */}
                     {finalResult && (
-                        <div className="mt-6 bg-gray-800 p-4 rounded space-y-4">
-                            {finalResult.error && (
-                                <p className="text-red-400">Error: {finalResult.error}</p>
-                            )}
-                            {!finalResult.error && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="mt-6 bg-gray-800 p-4 rounded space-y-4 shadow-lg"
+                        >
+                            {finalResult.error ? (
+                                <p className="text-red-400 text-center">{finalResult.error}</p>
+                            ) : (
                                 <>
-                                    <div className="bg-gray-900 p-3 rounded border border-gray-700">
-                                        <h3 className="text-lg font-bold mb-2 text-green-400">
+                                    {/* 📊 Final AI Prediction */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                    >
+                                        <h3 className="text-xl font-bold mb-2 text-green-400">
                                             📊 Final AI Prediction
                                         </h3>
                                         <p className="text-gray-300 whitespace-pre-wrap">
                                             {finalResult.finalAnswer}
                                         </p>
+                                    </motion.div>
+
+                                    {/* 🏆 Key Insights */}
+                                    <div className="space-y-4">
+                                        {finalResult.partialResponses?.map((resp: any, index: number) => (
+                                            <motion.div
+                                                key={index}
+                                                whileHover={{ scale: 1.02 }}
+                                                className="bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-lg"
+                                            >
+                                                <h4 className="text-lg font-semibold text-blue-400">
+                                                    ⚡ Model: {resp.id}
+                                                </h4>
+                                                <p className="text-gray-300">{resp.text}</p>
+                                            </motion.div>
+                                        ))}
                                     </div>
-                                    <div className="bg-gray-900 p-3 rounded border border-gray-700">
-                                        <h3 className="text-lg font-bold mb-2 text-blue-400">
-                                            🤖 AI Model Responses
-                                        </h3>
-                                        <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                      {JSON.stringify(finalResult.partialResponses, null, 2)}
-                    </pre>
+
+                                    {/* 📌 Detailed Breakdown */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                                        {[
+                                            { title: "🏅 Win Probability", data: finalResult.winProbability },
+                                            { title: "💰 Best Bet", data: finalResult.bestBet },
+                                            { title: "📊 Team Form", data: finalResult.teamForm },
+                                            { title: "🔄 Head-to-Head", data: finalResult.headToHead },
+                                            { title: "🚑 Injury Updates", data: finalResult.injuryUpdates },
+                                            { title: "🔥 Tactical Insights", data: finalResult.tactics },
+                                        ].map((item, index) => (
+                                            <motion.div
+                                                key={index}
+                                                whileHover={{ scale: 1.02 }}
+                                                className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                            >
+                                                <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
+                                                <p className="text-gray-300">{item.data || "No data available"}</p>
+                                            </motion.div>
+                                        ))}
                                     </div>
                                 </>
                             )}
-                        </div>
+                        </motion.div>
                     )}
-                </div>
+                </motion.div>
             </main>
 
             {/* FOOTER */}
