@@ -176,7 +176,7 @@ export default function DashboardPage() {
             </motion.header>
 
             {/* MAIN CONTENT */}
-            <main className="flex-1 py-4 px-8">
+            <main className="flex-1 py-4 px-4">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                                            focus:outline-none focus:ring-2 focus:ring-green-500
                                            focus:border-transparent text-sm transition-colors
                                            ease-in-out duration-150"
-                                rows={4}
+                                rows={2}
                                 placeholder="e.g. 'Who will likely win the next big rugby match?'"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
