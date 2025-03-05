@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AnalysisModelRegistry } from '../../../lib/analysisModelRegistry';
+import { MIddleAnalysisModelRegistry } from '../../../lib/MIddleAnalysisModelRegistry';
 
 /**
  * Calls the enabled AI models in parallel, returning partial responses.
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 1) Filter enabled models
-        const enabledModels = AnalysisModelRegistry.filter((m) => m.enabled);
+        const enabledModels = MIddleAnalysisModelRegistry.filter((m) => m.enabled);
         console.log("🔍 [response-analysis] Enabled models count:", enabledModels.length);
         if (enabledModels.length === 0) {
             console.error("❌ [response-analysis] No AI models are enabled.");

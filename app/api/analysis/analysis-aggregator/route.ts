@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
-import { callGPT4Aggregator } from "../../../lib/aggregatorGPT4";
+import { callPerplexityAggregator } from '../../../lib/FinalResponseAggregator';
 
 export async function POST(req: NextRequest) {
     try {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         combinedText += `📡 **Live Sports Data (Perplexity):**\n${perplexityData.join("\n\n")}`;
 
         // Call GPT‑4 aggregator to get the final answer
-        const finalAnswer = await callGPT4Aggregator(combinedText, perplexityData.join("\n\n"));
+        const finalAnswer = await callPerplexityAggregator(combinedText, perplexityData.join("\n\n"));
 
         // Return the aggregated result along with current usage info (unchanged here)
         return NextResponse.json({

@@ -1,4 +1,4 @@
-async function fetchLiveSportsData(query: string) {
+async function initialWebSearchForSportsData(query: string) {
     console.log("🚀 Fetching sports data using Perplexity AI...");
 
     try {
