@@ -168,33 +168,48 @@ export default function DashboardPage() {
                     {/* Input Form */ }
                     <form
                         onSubmit={ handleAnalyze }
-                        className="flex flex-col md:flex-row md:items-start md:space-x-2 mb-6"
+                        className="flex flex-col md:flex-row md:items-start md:space-x-4 space-y-4 md:space-y-0 mb-6"
                     >
-                        <motion.textarea
-                            initial={ { opacity: 0, y: 10 } }
-                            animate={ { opacity: 1, y: 0 } }
-                            className="flex-1 px-3 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none text-sm"
-                            rows={ 4 }
-                            placeholder="e.g. 'Who will likely win the next big rugby match?'"
-                            value={ query }
-                            onChange={ (e) => setQuery(e.target.value) }
-                        />
-                        <div className="flex flex-col md:flex-row md:space-x-2 mt-2 md:mt-0">
+                        {/* Text Area Container */ }
+                        <div className="flex-1">
+                            <motion.textarea
+                                id="query"
+                                initial={ { opacity: 0, y: 10 } }
+                                animate={ { opacity: 1, y: 0 } }
+                                transition={ { duration: 0.3 } }
+                                className="w-full p-4 rounded-lg bg-gray-800 border border-gray-600
+                 focus:outline-none focus:ring-2 focus:ring-green-500
+                 focus:border-transparent text-sm transition-colors
+                 ease-in-out duration-150"
+                                rows={ 4 }
+                                placeholder="e.g. 'Who will likely win the next big rugby match?'"
+                                value={ query }
+                                onChange={ (e) => setQuery(e.target.value) }
+                            />
+                        </div>
+
+                        {/* Buttons Container */ }
+                        <div className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-2 md:mt-0 mt-2">
                             <motion.button
-                                whileHover={ { scale: 1.05 } }
+                                whileHover={ { scale: 1.02 } }
                                 whileTap={ { scale: 0.95 } }
                                 type="submit"
                                 disabled={ loading || !isDeltaAlpha }
-                                className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold text-sm"
+                                className="bg-green-600 hover:bg-green-500 px-4 py-2
+                 rounded-lg text-white font-semibold text-sm
+                 transition-colors ease-in-out duration-150"
                             >
-                                { isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Prediction') : 'Come back soon!' }
+                                { isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Predictions') : 'Come back soon!' }
                             </motion.button>
+
                             <motion.button
-                                whileHover={ { scale: 1.05 } }
+                                whileHover={ { scale: 1.02 } }
                                 whileTap={ { scale: 0.95 } }
                                 onClick={ handleBestBets }
                                 disabled={ loading || !isDeltaAlpha }
-                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-semibold text-sm"
+                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2
+                 rounded-lg text-white font-semibold text-sm
+                 transition-colors ease-in-out duration-150"
                             >
                                 Get Best Bets
                             </motion.button>
