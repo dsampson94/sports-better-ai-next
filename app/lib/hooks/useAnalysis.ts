@@ -66,5 +66,5 @@ export function useAnalysis() {
         }
     }
 
-    return { finalResult, loading, error, analyze };
+    return { finalResult, loading, setLoading, error, analyze };
 }

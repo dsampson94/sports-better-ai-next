@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useAnalysis } from '../lib/hooks/useAnalysis';
+import { useRouter } from "next/navigation";
 
 interface UserProfile {
     email: string;
@@ -11,13 +12,14 @@ interface UserProfile {
 }
 
 export default function DashboardPage() {
+    const router = useRouter();
     const [query, setQuery] = useState("");
     const [errorMsg, setErrorMsg] = useState("");
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [profileLoading, setProfileLoading] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
 
-    const { finalResult, loading, error, analyze } = useAnalysis();
+    const { finalResult, loading, setLoading, error, analyze } = useAnalysis();
 
     // Fetch user profile on mount
     useEffect(() => {
@@ -25,22 +27,19 @@ export default function DashboardPage() {
             try {
                 const res = await fetch("/api/user/me");
                 if (!res.ok) {
-                    throw new Error("Failed to fetch user profile");
+                    throw new Error("Unauthorized");
                 }
                 const data = await res.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
                 setUserProfile(data);
-            } catch (err: any) {
-                console.error("Profile fetch error:", err);
-                setErrorMsg(err.message || "Error fetching profile");
+            } catch (err) {
+                console.error("Unauthorized access:", err);
+                router.push("/login");
             } finally {
-                setProfileLoading(false);
+                setLoading(false);
             }
         }
         fetchUserProfile();
-    }, []);
+    }, [router]);
 
     // Handle analysis submission only if free calls remain or if user has enough balance
     async function handleAnalyze(e: FormEvent) {
