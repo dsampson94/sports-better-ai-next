@@ -38,7 +38,7 @@ const UserSchema: Schema<IUser> = new Schema(
         autoRenew: { type: Boolean, default: true },
         usageCountThisMonth: { type: Number, default: 0 },
         freePredictionCount: { type: Number, default: 0 },
-        aiCallAllowance: { type: Number, default: 0 },
+        aiCallAllowance: { type: Number, default: 3 },
     },
     { timestamps: true }
 );
