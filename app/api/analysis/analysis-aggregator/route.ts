@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
-import { PROMPTS } from '../../../lib/prompts';
+import { PROMPTS } from "../../../lib/prompts";
 
 export async function POST(req: NextRequest) {
     try {
-        // Authenticate user via token in cookies
+        // Authenticate user
         const token = req.cookies.get("sportsbet_token")?.value;
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,30 +18,30 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid token" }, { status: 401 });
         }
 
-        // Connect to Mongo and retrieve the user
+        // Retrieve user
         await connectToDatabase();
         const user = await User.findOne({ email: decoded.email });
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Parse request payload: expect userInput, perplexityData, partialResponses
+        // Expect userInput, perplexityData, partialResponses
         const { userInput, perplexityData, partialResponses } = await req.json();
         if (!userInput || !perplexityData || !Array.isArray(partialResponses)) {
             return NextResponse.json({ error: "Invalid request payload" }, { status: 400 });
         }
 
-        // Merge partial responses and perplexity data for final aggregation
+        // Merge partial responses
         let combinedText = `🔎 **User Query:** ${userInput}\n\n📊 **AI Model Responses:**\n\n`;
         for (const resp of partialResponses) {
             combinedText += `⚡ **Model:** ${resp.id}\n📌 **Response:** ${resp.text}\n\n`;
         }
         combinedText += `📡 **Live Sports Data (Perplexity):**\n${perplexityData.join("\n\n")}`;
 
-        // Call GPT‑4 aggregator to get the final answer
+        // Call GPT aggregator
         const finalAnswer = await callPerplexityAggregator(combinedText, perplexityData.join("\n\n"));
 
-        // Return the aggregated result along with current usage info (unchanged here)
+        // Return final
         return NextResponse.json({
             finalAnswer,
             partialResponses,
@@ -80,7 +80,7 @@ async function callPerplexityAggregator(combinedText: string, sportsData: string
         }
 
         console.log("✅ Perplexity Aggregated Response:", JSON.stringify(data, null, 2));
-        return data.choices?.[0]?.message?.content || "No response from Perplexity.";
+        return data.finalAnswer || "No response from Perplexity.";
     } catch (error) {
         console.error("❌ Aggregator Call Failed:", error);
         return "❌ Internal Server Error in Perplexity Aggregator.";

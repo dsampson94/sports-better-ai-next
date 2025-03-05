@@ -2,8 +2,8 @@ import { useState } from "react";
 
 // Each game’s data structure
 export interface GamePrediction {
-    gameTitle: string;
-    competition: string;
+    gameTitle: string;               // e.g. "Ireland vs France"
+    competition: string;            // If aggregator includes "Competition:..."
     winProbability: string;
     bestBet: string;
     fixtureDetails: string;
@@ -15,7 +15,7 @@ export interface GamePrediction {
     bettingMarketMovement: string;
     expertPredictions: string;
     characterization: string;
-    fullText: string;
+    fullText: string;               // The entire block for debugging
     updatedBalance?: number;
     freePredictionCount?: number;
 }
@@ -31,13 +31,17 @@ export function useAnalysis() {
         setError("");
 
         try {
-            // 1) Web search data
-            const webSearchRes = await fetch("/api/analysis/web-search", { /* ... */ });
+            console.log("🔍 Step 1: web-search...");
+            const webSearchRes = await fetch("/api/analysis/web-search", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userInput }),
+            });
             const webSearchData = await webSearchRes.json();
             if (webSearchData.error) throw new Error(webSearchData.error);
             const perplexityData = webSearchData.perplexityData;
 
-            console.log("🤖 Step 2: Fetching AI response analysis...");
+            console.log("🤖 Step 2: response-analysis...");
             const responseAnalysisRes = await fetch("/api/analysis/response-analysis", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -47,7 +51,7 @@ export function useAnalysis() {
             if (responseAnalysisData.error) throw new Error(responseAnalysisData.error);
             const partialResponses = responseAnalysisData.partialResponses;
 
-            console.log("📊 Step 3: Fetching final aggregated response...");
+            console.log("📊 Step 3: aggregator...");
             const aggregatorRes = await fetch("/api/analysis/analysis-aggregator", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -56,45 +60,64 @@ export function useAnalysis() {
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
-            // aggregatorData.finalAnswer holds the combined text
-            const fullResponse = aggregatorData.finalAnswer || "No full response available";
+            const fullResponse: string = aggregatorData.finalAnswer || "No full response available";
             console.log("📝 Full Aggregated Text:\n", fullResponse);
 
-            // 4) Split on "## " to get multiple games
-            const rawBlocks = fullResponse.split(/^## /gm).map((b) => b.trim()).filter(Boolean);
+            // 1) Split into multiple blocks by searching for each occurrence of "🏆 Final Prediction & Betting Insights:"
+            //    We'll keep the text from that marker onward for each game, but also need the lines above it for the game title
+            const blocks = fullResponse
+                .split(/(?=🏆 Final Prediction & Betting Insights:)/g)
+                .map(b => b.trim())
+                .filter(Boolean);
 
-            // Helper to extract text between markers
-            function extractBetween(block: string, start: string, end: string | null) {
+            // Helper to parse bullet points from each block
+            function extractBetween(text: string, start: string, end: string | null) {
                 let pattern: RegExp;
                 if (end) {
                     pattern = new RegExp(start + "\\s*(.*?)\\s*(?=" + end + ")", "s");
                 } else {
                     pattern = new RegExp(start + "\\s*(.*)", "s");
                 }
-                const match = block.match(pattern);
+                const match = text.match(pattern);
                 return match ? match[1].trim() : "No data available";
             }
 
-            const predictions: GamePrediction[] = rawBlocks.map((block) => {
-                // 1) Game title is first line
-                const lines = block.split("\n");
-                const gameTitle = lines[0]?.trim() || "No Title";
+            const predictions: GamePrediction[] = [];
 
-                // 2) Check for "Competition:" line
+            // 2) For each block, we want the line(s) above "🏆 Final Prediction & Betting Insights:" to find e.g. "Ireland vs France"
+            //    We'll find the preceding lines by splitting fullResponse around this block
+            //    Alternatively, we can keep track of the chunk from the aggregator text
+            let currentIndex = 0;
+            blocks.forEach((block) => {
+                // We find where this block starts in the fullResponse
+                const blockStartIndex = fullResponse.indexOf(block, currentIndex);
+                // We'll search backward for a newline, up to e.g. 2 lines above, to see if there's "Ireland vs France"
+                // Or we can parse from aggregator text: aggregator might have a line "Ireland vs France" before "🏆 Final Prediction"
+                let gameTitle = "No Title";
                 let competition = "Unknown Competition";
-                for (const line of lines) {
-                    if (line.startsWith("Competition:")) {
-                        competition = line.replace("Competition:", "").trim();
+
+                // We'll find the text before "🏆" to see if there's a match heading
+                const beforeBlock = fullResponse.slice(currentIndex, blockStartIndex).trimEnd();
+                // Typically, the aggregator might have something like "Ireland vs France" just above the "🏆" line
+                // We'll get the last line of 'beforeBlock'
+                const lines = beforeBlock.split("\n").map(l => l.trim()).filter(Boolean);
+                const lastLine = lines[lines.length - 1] || "";
+                // If it looks like a match heading, use it
+                if (lastLine && lastLine.length < 120) {
+                    // e.g. "Ireland vs France" or "🏴 Scotland vs 🏴 Wales" etc.
+                    gameTitle = lastLine;
+                }
+
+                // Also check if aggregator includes a "Competition:" line anywhere above
+                for (let i = lines.length - 1; i >= 0; i--) {
+                    if (lines[i].startsWith("Competition:")) {
+                        competition = lines[i].replace("Competition:", "").trim();
                         break;
                     }
                 }
 
-                // 3) Find "🏆 Final Prediction & Betting Insights:" portion
-                const predictionSection = block.includes("🏆 Final Prediction & Betting Insights:")
-                    ? block.split("🏆 Final Prediction & Betting Insights:")[1]
-                    : block;
-
-                // 4) Extract bullet points
+                // Now parse the bullet points from block
+                const predictionSection = block; // The block starts with "🏆 Final Prediction..."
                 const winProbability = extractBetween(predictionSection, "- Win Probability:", "- Best Bet:");
                 const bestBet = extractBetween(predictionSection, "- Best Bet:", "- Key Stats & Trends:");
                 const fixtureDetails = extractBetween(predictionSection, "- 📅 Fixture Details:", "- 📊 Recent Form:");
@@ -107,7 +130,7 @@ export function useAnalysis() {
                 const expertPredictions = extractBetween(predictionSection, "- 📈 Expert Predictions", "- 📈 Characterization:");
                 const characterization = extractBetween(predictionSection, "- 📈 Characterization:", null);
 
-                return {
+                predictions.push({
                     gameTitle,
                     competition,
                     winProbability,
@@ -122,14 +145,21 @@ export function useAnalysis() {
                     expertPredictions,
                     characterization,
                     fullText: block,
-                };
+                });
+
+                // Move currentIndex to the end of this block
+                currentIndex = blockStartIndex + block.length;
             });
 
-            // 5) Update usage
-            const updateRes = await fetch("/api/user/update-usage", { method: "POST", headers: { "Content-Type": "application/json" } });
+            // 3) Update usage
+            const updateRes = await fetch("/api/user/update-usage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
             const updateData = await updateRes.json();
-            if (updateData.error) console.warn("⚠️ Failed to update usage:", updateData.error);
-
+            if (updateData.error) {
+                console.warn("⚠️ Failed to update usage:", updateData.error);
+            }
             predictions.forEach((p) => {
                 p.updatedBalance = updateData.updatedBalance ?? 0;
                 p.freePredictionCount = updateData.freePredictionCount ?? 0;

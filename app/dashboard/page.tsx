@@ -74,9 +74,6 @@ export default function DashboardPage() {
                         <p className="text-gray-300">Free Calls Used: {userProfile.freePredictionCount ?? 0} / 3</p>
                     </div>
                 )}
-                <a href="/api/auth/logout" className="text-red-400 hover:text-red-500 transition">
-                    Logout
-                </a>
             </motion.header>
 
             {/* MAIN CONTENT */}
@@ -91,7 +88,8 @@ export default function DashboardPage() {
                         AI Sports Predictions ⚽🏀🎾
                     </h2>
                     <p className="mb-4 text-gray-400 text-center">
-                        Enter your query about upcoming matches. Our AI analyzes multiple models and provides <strong>the best synthesized prediction</strong>.
+                        Enter your query about upcoming matches. Our AI analyzes multiple models
+                        and provides <strong>the best synthesized prediction</strong>.
                     </p>
 
                     {errorMsg && (
@@ -125,6 +123,7 @@ export default function DashboardPage() {
                         </motion.button>
                     </form>
 
+                    {/* RESULT SECTION */}
                     {finalResult && finalResult.length > 0 && (
                         <div className="space-y-8">
                             {finalResult.map((prediction: GamePrediction, idx: number) => (
@@ -187,8 +186,8 @@ export default function DashboardPage() {
                                     >
                                         <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
                                         <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                      {prediction.fullText}
-                    </pre>
+                                            {prediction.fullText}
+                                        </pre>
                                     </motion.div>
                                 </motion.div>
                             ))}
