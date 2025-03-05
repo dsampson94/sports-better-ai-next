@@ -21,8 +21,13 @@ export interface GamePrediction {
     freePredictionCount?: number;
 }
 
+export interface AnalysisResult {
+    predictions: GamePrediction[];
+    aggregatedIntro: string; // the non-game intro text (must start with 🔮)
+}
+
 export function useAnalysis() {
-    const [finalResult, setFinalResult] = useState<GamePrediction[] | null>(null);
+    const [finalResult, setFinalResult] = useState<AnalysisResult | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
 
@@ -76,16 +81,29 @@ export function useAnalysis() {
 
             console.log('📝 Full Aggregated Text:\n', aggregated);
 
-            // Also capture citations from aggregator (shared among all games)
+            // Also capture citations from aggregator
             const aggregatorCitations = aggregatorData.citations || [];
             console.log('🔗 Citations:', aggregatorCitations);
 
-            // Split aggregated text into game blocks.
-            // We assume each game block starts with "🏆 Game Title:"
-            const gameBlocks = aggregated
+            // Split the aggregated text into intro and game blocks.
+            let introText = '';
+            let gameText = aggregated;
+            const splitIndex = aggregated.indexOf('🏆 Game Title:');
+            if (splitIndex !== -1) {
+                introText = aggregated.slice(0, splitIndex).trim();
+                // Ensure the intro starts with the 🔮 emoji. Otherwise, discard it.
+                if (!introText.startsWith('🔮')) {
+                    introText = '';
+                }
+                gameText = aggregated.slice(splitIndex);
+            }
+
+            // Split gameText into blocks. We assume each game block starts with "🏆 Game Title:"
+            const gameBlocks = gameText
                 .split(/(?=🏆 Game Title:)/g)
                 .map((b: string) => b.trim())
                 .filter(Boolean);
+
             console.log('🔎 Game Blocks Found:', gameBlocks.length);
             gameBlocks.forEach((block, index) => {
                 console.log(`Game Block ${index + 1}:\n${block}\n---------------------`);
@@ -105,11 +123,12 @@ export function useAnalysis() {
 
             const predictions: GamePrediction[] = gameBlocks.map((block) => {
                 const lines = block.split('\n');
-                // Assume first line is like "**1. Italy vs Wales**"
+                // Assume first line is like "**1. Italy vs Wales**" or "🏆 Game Title: India vs Australia"
                 const firstLine = lines[0]?.trim() || '';
-                const gameTitle = firstLine.replace(/^\*\*\d+\.\s/, '').replace(/\*\*$/, '').trim();
+                // Remove the "🏆 Game Title:" prefix if present
+                const gameTitle = firstLine.replace(/^🏆 Game Title:\s*/, '').trim();
 
-                // Extract Competition if available from any line starting with "Competition:"
+                // Check for a "Competition:" line
                 let competition = '';
                 for (const line of lines) {
                     if (line.startsWith('Competition:')) {
@@ -118,7 +137,7 @@ export function useAnalysis() {
                     }
                 }
 
-                // Start from "🏆 Final Prediction & Betting Insights:"
+                // Start from "🏆 Final Prediction & Betting Insights:" for the bullet section
                 const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
                 const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
 
@@ -169,7 +188,7 @@ export function useAnalysis() {
                 p.freePredictionCount = updateData.freePredictionCount ?? 0;
             });
 
-            setFinalResult(predictions);
+            setFinalResult({ predictions, aggregatedIntro: introText });
         } catch (e: any) {
             setError(e.message || 'Error analyzing input.');
             console.error('❌ Analysis Error:', e.message);

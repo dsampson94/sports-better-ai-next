@@ -113,7 +113,7 @@ export default function DashboardPage() {
                         </motion.div>
                     )}
 
-                    <form onSubmit={handleAnalyze} className="space-y-4 space-x-8 mb-6">
+                    <form onSubmit={handleAnalyze} className="space-y-4 mb-6">
                         <motion.textarea
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -136,22 +136,36 @@ export default function DashboardPage() {
                         </motion.button>
                     </form>
 
-                    {/* If we have finalResult, show each game prediction */}
-                    {finalResult && finalResult.length > 0 && (
+                    {/* Render Aggregated Intro if available */}
+                    {finalResult && finalResult.aggregatedIntro && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5 }}
+                            className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md mb-8"
+                        >
+                            <h3 className="text-xl font-bold text-blue-300 mb-2">Overview</h3>
+                            <p className="text-gray-300 whitespace-pre-wrap">{finalResult.aggregatedIntro}</p>
+                        </motion.div>
+                    )}
+
+                    {/* Render Game Prediction Blocks */}
+                    {finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
-                            {finalResult.map((prediction: GamePrediction, idx: number) => (
+                            {finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ duration: 0.5 }}
-                                    className="bg-gray-800 p-6 rounded space-y-6 shadow-lg w-full"
+                                    className="bg-gray-800 p-6 rounded shadow-lg w-full"
                                 >
-                                    <h2 className="text-2xl font-bold text-blue-300 mb-1">
-                                        {prediction.gameTitle}
-                                    </h2>
+                                    <h2 className="text-2xl font-bold text-blue-300 mb-1">{prediction.gameTitle}</h2>
+                                    {prediction.competition && (
+                                        <p className="text-sm text-gray-400 mb-3">Competition: {prediction.competition}</p>
+                                    )}
 
-                                    {/* 🏆 Final Prediction */}
+                                    {/* 🏆 Final Prediction Block */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
@@ -166,7 +180,7 @@ export default function DashboardPage() {
                                     </motion.div>
 
                                     {/* 📌 Key Stats & Trends */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                         {[
                                             { title: "📅 Fixture Details", data: prediction.fixtureDetails },
                                             { title: "📊 Recent Form", data: prediction.recentForm },
@@ -189,34 +203,37 @@ export default function DashboardPage() {
                                         ))}
                                     </div>
 
-                                    {/* 📜 Full AI Response (Optional) */}
+                                    {/* 📜 Full AI Response */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
-                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
                                     >
                                         <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
-                                        <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                                            {prediction.fullText}
-                                        </pre>
+                                        <pre className="text-sm whitespace-pre-wrap text-gray-300">{prediction.fullText}</pre>
                                     </motion.div>
                                 </motion.div>
                             ))}
 
-                            {/* 🔗 Citations SHOWN ONLY ONCE at the BOTTOM */}
-                            {finalResult[0].citations && finalResult[0].citations.length > 0 && (
-                                <motion.div
-                                    whileHover={{ scale: 1.02 }}
-                                    className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
-                                >
-                                    <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations (All Games)</h3>
-                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                                        {finalResult[0].citations.map((cite, cIdx) => (
-                                            <li key={cIdx}>{cite}</li>
-                                        ))}
-                                    </ul>
-                                </motion.div>
-                            )}
+                            {/* Render Citations Once at the Bottom */}
+                            {finalResult.predictions[0].citations &&
+                                finalResult.predictions[0].citations.length > 0 && (
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                    >
+                                        <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations (All Games)</h3>
+                                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                            {finalResult.predictions[0].citations.map((cite, cIdx) => (
+                                                <li key={cIdx}>{cite}</li>
+                                            ))}
+                                        </ul>
+                                    </motion.div>
+                                )}
                         </div>
+                    )}
+
+                    {error && (
+                        <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>
                     )}
                 </motion.div>
             </main>
