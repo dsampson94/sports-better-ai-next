@@ -64,7 +64,7 @@ export default function DashboardPage() {
                 className="bg-gray-800 p-4 flex justify-between items-center"
             >
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-14" />
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
                     <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
                 {!profileLoading && userProfile && (
@@ -186,8 +186,8 @@ export default function DashboardPage() {
                                     >
                                         <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
                                         <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                                            {prediction.fullText}
-                                        </pre>
+                      {prediction.fullText}
+                    </pre>
                                     </motion.div>
                                 </motion.div>
                             ))}
