@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     try {
         // decode token to get user email
         const token = req.cookies.get("sportsbet_token")?.value;
-        if (!token) {
+            if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);

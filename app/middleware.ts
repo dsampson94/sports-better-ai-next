@@ -1,20 +1,22 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
+import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 
-export const config = {
-    matcher: ["/dashboard/:path*"],
-};
+export async function middleware(req: NextRequest) {
+    const token = req.cookies.get('sportsbet_token')?.value;
 
-export function middleware(req: NextRequest) {
-    const token = req.cookies.get("sportsbet_token")?.value;
     if (!token) {
-        return NextResponse.redirect(new URL("/login", req.url));
+        return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });
     }
+
     try {
         jwt.verify(token, process.env.JWT_SECRET!);
         return NextResponse.next();
-    } catch {
-        return NextResponse.redirect(new URL("/login", req.url));
+    } catch (error) {
+        return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 });
     }
 }
+
+// Specify routes you want to protect
+export const config = {
+    matcher: ['/api/admin/:path*', '/api/user/:path*', '/api/voice-notes/:path*'],
+};

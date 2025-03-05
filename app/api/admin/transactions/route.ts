@@ -1,28 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import connectToDatabase from "../../../lib/mongoose";
-import Transaction from "../../../lib/models/Transaction";
-import User from "../../../lib/models/User";
+import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
+import connectToDatabase from '../../../lib/mongoose';
+import Transaction from '../../../lib/models/Transaction';
+
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function GET(req: NextRequest) {
+    await connectToDatabase();
+
+    const token = req.cookies.get('sportsbet_token')?.value;
+
+    if (!token) {
+        return NextResponse.json({ error: 'Authentication token missing' }, { status: 401 });
+    }
+
     try {
-        const token = req.cookies.get("sportsbet_token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+
+        if (!decoded.isAdmin) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-        await connectToDatabase();
-        const requestingUser = await User.findOne({ email: decoded.email });
+        const transactions = await Transaction.find().populate('user', 'email username');
 
-        if (!requestingUser || requestingUser.role !== "ADMIN") {
-            return NextResponse.json({ error: "Access denied" }, { status: 403 });
-        }
-
-        const transactions = await Transaction.find({});
-        return NextResponse.json({ transactions });
+        return NextResponse.json(transactions, { status: 200 });
     } catch (error: any) {
-        console.error("GET /api/admin/transactions error:", error);
-        return NextResponse.json({ error: "Internal error" }, { status: 500 });
+        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 }
