@@ -69,23 +69,33 @@ export default function DashboardPage() {
             return;
         }
 
-        const freeCalls = userProfile.freePredictionCount;
+        const freeCalls = userProfile.freePredictionCount; // ✅ Now used
         const balance = userProfile.balance;
         const aiCalls = userProfile.aiCallAllowance;
         const costPerCall = 0.5;
 
-        if (aiCalls === 0 && balance < costPerCall) {
+        // ✅ Use free calls first, then deduct AI calls, then balance
+        if (freeCalls > 0) {
+            setUserProfile(prev => ({
+                ...prev,
+                freePredictionCount: prev.freePredictionCount - 1, // ✅ Deduct free call first
+            }));
+        } else if (aiCalls > 0) {
+            setUserProfile(prev => ({
+                ...prev,
+                aiCallAllowance: Math.max(0, prev.aiCallAllowance - 1), // ✅ Deduct AI call
+            }));
+        } else if (balance >= costPerCall) {
+            setUserProfile(prev => ({
+                ...prev,
+                balance: Math.max(0, prev.balance - costPerCall), // ✅ Deduct from balance
+            }));
+        } else {
             setErrorMsg('You have used all your AI calls and do not have enough balance. Please add credits.');
             return;
         }
 
         await analyze(query);
-
-        // Deduct AI Call Allowance on Successful Request
-        setUserProfile(prev => ({
-            ...prev,
-            aiCallAllowance: Math.max(0, prev.aiCallAllowance - 1), // Ensure it never goes below zero
-        }));
     }
 
     // "Get Best Bets" button handler
