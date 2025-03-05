@@ -64,7 +64,7 @@ export default function DashboardPage() {
                 className="bg-gray-800 p-4 flex justify-between items-center"
             >
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-14" />
                     <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
                 {!profileLoading && userProfile && (
