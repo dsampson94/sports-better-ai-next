@@ -148,8 +148,8 @@ export function useAnalysis() {
                 const injuryUpdates = extractBetween(bulletSection, '- 🚑 Injury & Squad Updates:', '- 🌍 Home/Away Impact:');
                 const homeAwayImpact = extractBetween(bulletSection, '- 🌍 Home/Away Impact:', '- 🔥 Tactical Insights:');
                 const tacticalInsights = extractBetween(bulletSection, '- 🔥 Tactical Insights:', '- 💰 Betting Market Movement:');
-                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 📈 Expert Predictions & Trends:');
-                const expertPredictions = extractBetween(bulletSection, '- 💡 Expert Predictions & Trends:', '- 📈 Characterization:');
+                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 💡 Expert Predictions & Trends:');
+                const expertPredictions = extractBetween(bulletSection, '- 💡 Expert Predictions & Trends:', '- 📝 Characterization:');
                 const characterization = extractBetween(bulletSection, '- 📝 Characterization:', '- 🎯 Overall Recommendation:');
                 const overallRecommendation = extractBetween(bulletSection, '- 🎯 Overall Recommendation:', null);
 
