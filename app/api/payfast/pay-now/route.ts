@@ -1,7 +1,8 @@
-// app/api/payfast/pay-now/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import connectToDatabase from '../../../lib/mongoose';
+import User from '../../../lib/models/User';
 
 export async function POST(req: NextRequest) {
     try {
@@ -14,31 +15,62 @@ export async function POST(req: NextRequest) {
         const passphrase = process.env.PAYFAST_PASSPHRASE;
         const testingMode = process.env.PAYFAST_ENVIRONMENT !== "live";
 
-        // 2) Build the data object (include only the fields you actually need)
+        // 2) Retrieve the user from the token (instead of hardcoded values)
+        const token = req.cookies.get("sportsbet_token")?.value;
+        if (!token) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        let decoded: any;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET!);
+        } catch (err) {
+            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+        }
+
+        await connectToDatabase();
+        const user = await User.findOne({ email: decoded.email });
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Use user's data: if username exists, split it for first and last name, otherwise split email.
+        let name_first = "User";
+        let name_last = "";
+        if (user.username) {
+            const parts = user.username.split(" ");
+            name_first = parts[0];
+            name_last = parts.slice(1).join(" ") || "";
+        } else if (user.email) {
+            // Split email at '@'
+            name_first = user.email.split("@")[0];
+            name_last = "";
+        }
+        const email_address = user.email;
+
+        // 3) Build the data object (include only the fields you actually need)
         const data: Record<string, string> = {
             merchant_id: merchantId,
             merchant_key: merchantKey,
             return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment=success`,
             cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?payment=cancelled`,
             notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payfast/notify`,
-            name_first: "John",
-            name_last: "Doe",
-            email_address: "deltaalphavids@gmail.com",
+            name_first,
+            name_last,
+            email_address,
             m_payment_id: orderId || "unique-order-id",
             amount: Number(amount).toFixed(2),
             item_name: itemName || "Test Product",
-            // custom_str1: "foo", etc., if you need them
         };
 
-        // 3) Generate the signature in strict PayFast param order
+        // 4) Generate the signature in strict PayFast param order
         data.signature = generateSignature(data, passphrase);
 
-        // 4) Construct the correct URL
+        // 5) Construct the correct URL
         const payfastHost = testingMode
             ? "https://sandbox.payfast.co.za/eng/process"
             : "https://www.payfast.co.za/eng/process";
 
-        // 5) Return JSON for your front-end to build the hidden form
+        // 6) Return JSON for your front-end to build the hidden form
         return NextResponse.json({
             actionUrl: payfastHost,
             formData: data,
@@ -50,8 +82,8 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Generate a PayFast signature using the exact param order + 'spaces as plus (+)'
- * Order derived from PayFast docs: merchant_id, merchant_key, return_url, cancel_url, ...
+ * Generate a PayFast signature using the exact param order + 'spaces as plus (+)'.
+ * Order derived from PayFast docs: merchant_id, merchant_key, return_url, cancel_url, etc.
  */
 function generateSignature(data: Record<string, string>, passphrase?: string) {
     // 1) Param order from PayFast docs
@@ -59,30 +91,27 @@ function generateSignature(data: Record<string, string>, passphrase?: string) {
         'merchant_id', 'merchant_key', 'return_url', 'cancel_url', 'notify_url',
         'name_first', 'name_last', 'email_address',
         'm_payment_id', 'amount', 'item_name',
-        // If you have extra fields like custom_str1..5, frequency, subscription_type, etc., put them here in order
     ];
 
     // 2) Build param string in exact order, only if non-empty
-    let paramString = '';
+    let paramString = "";
     for (const key of paramOrder) {
         if (data[key]) {
-            // encode, then replace %20 with + to match PayFast's requirement
-            const encoded = encodeURIComponent(data[key].trim()).replace(/%20/g, '+');
+            const encoded = encodeURIComponent(data[key].trim()).replace(/%20/g, "+");
             paramString += `${key}=${encoded}&`;
         }
     }
-
-    // remove trailing &
-    if (paramString.endsWith('&')) {
+    // Remove trailing '&'
+    if (paramString.endsWith("&")) {
         paramString = paramString.slice(0, -1);
     }
 
-    // 3) Append passphrase if it exists in your PayFast dashboard
+    // 3) Append passphrase if available
     if (passphrase) {
-        const passEncoded = encodeURIComponent(passphrase.trim()).replace(/%20/g, '+');
+        const passEncoded = encodeURIComponent(passphrase.trim()).replace(/%20/g, "+");
         paramString += `&passphrase=${passEncoded}`;
     }
 
     // 4) MD5 hash
-    return crypto.createHash('md5').update(paramString).digest('hex');
+    return crypto.createHash("md5").update(paramString).digest("hex");
 }
