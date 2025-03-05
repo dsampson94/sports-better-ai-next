@@ -8,15 +8,21 @@ import { motion } from 'framer-motion';
 interface UserProfile {
     email: string;
     username?: string;
-    balance?: number;
-    freePredictionCount?: number;
+    balance: number;
+    freePredictionCount: number;
 }
 
 export default function DashboardPage() {
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    // Initialize with default values so the account info appears immediately without flashing
+    const [userProfile, setUserProfile] = useState<UserProfile>({
+        email: '',
+        username: '',
+        balance: 0,
+        freePredictionCount: 0,
+    });
     const [profileLoading, setProfileLoading] = useState(true);
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -28,7 +34,12 @@ export default function DashboardPage() {
                 const res = await fetch('/api/user/me');
                 if (!res.ok) throw new Error('Unauthorized');
                 const data = await res.json();
-                setUserProfile(data);
+                setUserProfile({
+                    email: data.email || '',
+                    username: data.username || '',
+                    balance: data.balance ?? 0,
+                    freePredictionCount: data.freePredictionCount ?? 0,
+                });
             } catch (err) {
                 console.error('Unauthorized access:', err);
                 router.push('/login');
@@ -40,7 +51,7 @@ export default function DashboardPage() {
     }, [router]);
 
     // Check if user is the special user "deltaalphavids"
-    const isDeltaAlpha = userProfile?.username === 'deltaalphavids';
+    const isDeltaAlpha = userProfile.username === 'deltaalphavids';
 
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
@@ -51,8 +62,8 @@ export default function DashboardPage() {
             return;
         }
 
-        const freeCalls = userProfile?.freePredictionCount ?? 0;
-        const balance = userProfile?.balance ?? 0;
+        const freeCalls = userProfile.freePredictionCount;
+        const balance = userProfile.balance;
         const costPerCall = 0.5;
 
         if (freeCalls >= 3 && balance < costPerCall) {
@@ -62,10 +73,10 @@ export default function DashboardPage() {
         await analyze(query);
     }
 
-    // Handler for toggling the user dropdown
+    // Toggle for user dropdown
     const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-    // Handler for logout (could also navigate programmatically)
+    // Logout handler
     const handleLogout = () => {
         router.push('/api/auth/logout');
     };
@@ -81,67 +92,45 @@ export default function DashboardPage() {
             >
                 {/* Left: Logo and Title */}
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-1/4" />
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
+                    <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
                 {/* Right: Query Input, Button & User Dropdown */}
                 <div className="flex items-center space-x-4 relative">
-                    <form onSubmit={handleAnalyze} className="flex space-x-2">
-                        <input
-                            type="text"
-                            className="px-3 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none text-sm"
-                            placeholder="Enter your query..."
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                        />
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            type="submit"
-                            disabled={loading || !isDeltaAlpha}
-                            className="bg-green-600 hover:bg-green-500 px-3 py-2 rounded text-white font-semibold text-sm"
-                        >
-                            {isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Prediction') : 'Come back soon!'}
-                        </motion.button>
-                    </form>
                     {/* User Info Dropdown */}
-                    {!profileLoading && userProfile && (
-                        <div className="relative">
-                            <button
-                                onClick={toggleDropdown}
-                                className="flex items-center space-x-1 bg-gray-700 px-3 py-2 rounded text-sm hover:bg-gray-600 transition"
+                    <div className="relative">
+                        <button
+                            onClick={toggleDropdown}
+                            className="flex items-center space-x-1 bg-gray-700 px-3 py-2 rounded text-sm hover:bg-gray-600 transition"
+                        >
+                            <span className="font-semibold">{userProfile.username || userProfile.email}</span>
+                            <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
                             >
-                                <span className="font-semibold">{userProfile.username || userProfile.email}</span>
-                                <svg
-                                    className="w-4 h-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                    xmlns="http://www.w3.org/2000/svg"
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        {dropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded shadow-lg z-10">
+                                <button
+                                    onClick={() => {
+                                        setDropdownOpen(false);
+                                        router.push('/add-credit');
+                                    }}
+                                    className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            {dropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded shadow-lg z-10">
-                                    <button
-                                        onClick={() => {
-                                            setDropdownOpen(false);
-                                            router.push('/add-credit');
-                                        }}
-                                        className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
-                                    >
-                                        Add Credit
-                                    </button>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                    Add Credit
+                                </button>
+                                <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm">
+                                    Logout
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </motion.header>
 
@@ -154,7 +143,7 @@ export default function DashboardPage() {
                     className="w-full max-w-screen-xl mx-auto"
                 >
                     <p className="mb-4 text-gray-400 text-center">
-                        Our advanced AI system leverages multiple cutting-edge models and real-time sports data to deliver a highly refined, synthesized prediction. By cross-referencing diverse analytical insights and live market trends, we provide you with the most accurate and actionable betting recommendation available.
+                        Our advanced AI system leverages multiple cutting-edge models and real-time web searches to compare diverse analytical insights and live market trends, delivering the most accurate and actionable betting prediction.
                     </p>
 
                     {errorMsg && (
@@ -166,6 +155,27 @@ export default function DashboardPage() {
                             {errorMsg}
                         </motion.div>
                     )}
+
+                    <form onSubmit={handleAnalyze} className="space-y-4 mb-6">
+                        <motion.textarea
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none"
+                            rows={4}
+                            placeholder="e.g. 'Who will likely win the next big rugby match?'"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            type="submit"
+                            disabled={loading || !isDeltaAlpha}
+                            className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold w-full"
+                        >
+                            {isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get AI Prediction') : 'Under Construction, come back soon!'}
+                        </motion.button>
+                    </form>
 
                     {/* Render Aggregated Intro if available */}
                     {finalResult && finalResult.aggregatedIntro && (
@@ -205,9 +215,7 @@ export default function DashboardPage() {
                         </div>
                     )}
 
-                    {error && (
-                        <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>
-                    )}
+                    {error && <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>}
                 </motion.div>
             </main>
 
@@ -220,7 +228,11 @@ export default function DashboardPage() {
 }
 
 // Component for each prediction block with collapse functionality
-const PredictionBlock = ({ prediction }: { prediction: GamePrediction }) => {
+interface PredictionBlockProps {
+    prediction: GamePrediction;
+}
+
+const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
     const [collapsed, setCollapsed] = useState(false);
     const isIntroBlock = prediction.gameTitle.startsWith('🔮');
 
@@ -247,6 +259,7 @@ const PredictionBlock = ({ prediction }: { prediction: GamePrediction }) => {
                     </button>
                     {!collapsed && (
                         <>
+                            {/* Final Prediction */}
                             <motion.div
                                 whileHover={{ scale: 1.02 }}
                                 className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
@@ -259,6 +272,7 @@ const PredictionBlock = ({ prediction }: { prediction: GamePrediction }) => {
                                     <strong>Best Bet:</strong> {prediction.bestBet}
                                 </p>
                             </motion.div>
+                            {/* Key Stats & Trends */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {[
                                     { title: '📅 Fixture Details', data: prediction.fixtureDetails },
@@ -282,6 +296,7 @@ const PredictionBlock = ({ prediction }: { prediction: GamePrediction }) => {
                                     </motion.div>
                                 ))}
                             </div>
+                            {/* Full AI Response */}
                             <motion.div
                                 whileHover={{ scale: 1.02 }}
                                 className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
