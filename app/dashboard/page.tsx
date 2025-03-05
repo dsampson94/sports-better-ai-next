@@ -59,13 +59,13 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gray-900 text-white flex flex-col">
             {/* HEADER */ }
             <motion.header
-                initial={ { opacity: 0, y: -20 } }
-                animate={ { opacity: 1, y: 0 } }
-                transition={ { duration: 0.5 } }
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
                 className="bg-gray-800 p-4 flex justify-between items-center"
             >
-                <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10"/>
-                <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
+                <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-12 w-12 object-contain"/>
+                <h1 className="text-xl font-bold text-white">SportsBetter AI 🏆</h1>
             </motion.header>
 
             {/* MAIN CONTENT */ }
