@@ -123,7 +123,7 @@ export default function DashboardPage() {
                         </motion.div>
                     ) }
 
-                    <form onSubmit={ handleAnalyze } className="space-y-4 mb-6">
+                    <form onSubmit={ handleAnalyze } className="space-y-4 space-x-8 mb-6">
                         <motion.textarea
                             initial={ { opacity: 0, y: 10 } }
                             animate={ { opacity: 1, y: 0 } }
