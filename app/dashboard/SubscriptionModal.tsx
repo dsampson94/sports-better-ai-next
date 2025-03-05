@@ -62,45 +62,39 @@ const SubscriptionModal = ({ onClose }: SubscriptionModalProps) => {
                 className="bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-xl rounded-xl max-w-lg w-full p-8 relative"
             >
                 <button
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-300 transition"
                     onClick={onClose}
                 >
                     ✕
                 </button>
 
-                <h2 className="text-3xl font-semibold text-center mb-4">
-                    🚀 Upgrade Your Plan
-                </h2>
+                <h2 className="text-3xl font-semibold text-center mb-4">🚀 Upgrade Your Plan</h2>
                 <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-                    Choose a plan that fits your betting insights needs.
+                    Select a subscription plan below:
                 </p>
 
                 <div className="grid grid-cols-1 gap-4">
-                    {Object.entries(plans).map(([key, { price, aiCalls }]) => (
-                        <div
+                    {Object.entries(plans).map(([key, { price, aiCalls, duration }]) => (
+                        <button
                             key={key}
-                            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-between hover:shadow-md transition"
+                            onClick={() => handleSubscribe(key as keyof typeof plans)}
+                            className="w-full text-left flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 transition rounded-lg border border-gray-700"
                         >
                             <div>
-                                <h3 className="text-lg font-medium capitalize">{key} Plan</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {aiCalls} AI Calls • {plans[key].duration} days
+                                <h3 className="text-lg font-semibold capitalize text-white">{key} Plan</h3>
+                                <p className="text-sm text-gray-400">
+                                    {aiCalls} AI Calls • {duration} days
                                 </p>
                             </div>
-                            <button
-                                onClick={() => handleSubscribe(key as keyof typeof plans)}
-                                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition shadow-sm"
-                            >
-                                ${price}
-                            </button>
-                        </div>
+                            <span className="text-lg font-semibold text-white">${price}</span>
+                        </button>
                     ))}
                 </div>
 
                 <div className="mt-6 text-center">
                     <button
                         onClick={onClose}
-                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition"
+                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-300 transition"
                     >
                         Maybe Later
                     </button>
