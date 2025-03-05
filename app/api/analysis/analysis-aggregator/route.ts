@@ -80,7 +80,7 @@ async function callPerplexityAggregator(combinedText: string, sportsData: string
         }
 
         console.log("✅ Perplexity Aggregated Response:", JSON.stringify(data, null, 2));
-        return data.finalAnswer || "No response from Perplexity.";
+        return data.choices?.[0]?.message?.content || "No response from Perplexity.";
     } catch (error) {
         console.error("❌ Aggregator Call Failed:", error);
         return "❌ Internal Server Error in Perplexity Aggregator.";
