@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// Define the structured response type
+// Define the structured response type with all bullet fields
 interface AnalysisResult {
     winProbability: string;
     bestBet: string;
@@ -13,6 +13,7 @@ interface AnalysisResult {
     bettingMarketMovement: string;
     expertPredictions: string;
     characterization: string;
+    fullText: string; // the raw, full response text for debugging or fallback
     updatedBalance?: number;
     freePredictionCount?: number;
 }
@@ -57,19 +58,63 @@ export function useAnalysis() {
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
-            console.log("🔄 Step 4: Mapping aggregated response...");
+            // Get the full aggregated text
+            const fullResponse =
+                aggregatorData.choices?.[0]?.message?.content || "No full response available";
+
+            // Helper function: Extract text between two markers using regex.
+            // If 'end' is null, extract to the end of the string.
+            function extractBetween(start: string, end: string | null): string {
+                let pattern: RegExp;
+                if (end) {
+                    pattern = new RegExp(start + "\\s*(.*?)\\s*(?=" + end + ")", "s");
+                } else {
+                    pattern = new RegExp(start + "\\s*(.*)", "s");
+                }
+                const match = fullResponse.match(pattern);
+                return match ? match[1].trim() : "No data available";
+            }
+
+            // Assuming the aggregated response uses the following bullet point headers:
+            // - Win Probability (%): ...
+            // - Best Bet: ...
+            // - Key Stats & Trends:
+            //      - 📅 Fixture Details: ...
+            //      - 📊 Recent Form: ...
+            //      - 🔄 Head-to-Head Record: ...
+            //      - 🚑 Injury Updates: ...
+            //      - 🌍 Home/Away Impact: ...
+            //      - 🔥 Tactical Insights: ...
+            //      - 💰 Betting Market Movement: ...
+            //      - 📈 Expert Predictions & Trends: ...
+            //      - 📈 Characterization: ...
+
+            const winProbability = extractBetween("- Win Probability (%):", "- Best Bet:");
+            const bestBet = extractBetween("- Best Bet:", "- Key Stats & Trends:");
+            const fixtureDetails = extractBetween("- 📅 Fixture Details:", "- 📊 Recent Form:");
+            const recentForm = extractBetween("- 📊 Recent Form:", "- 🔄 Head-to-Head Record:");
+            const headToHead = extractBetween("- 🔄 Head-to-Head Record:", "- 🚑 Injury Updates:");
+            const injuryUpdates = extractBetween("- 🚑 Injury Updates:", "- 🌍 Home/Away Impact:");
+            const homeAwayImpact = extractBetween("- 🌍 Home/Away Impact:", "- 🔥 Tactical Insights:");
+            const tacticalInsights = extractBetween("- 🔥 Tactical Insights:", "- 💰 Betting Market Movement:");
+            const bettingMarketMovement = extractBetween("- 💰 Betting Market Movement:", "- 📈 Expert Predictions & Trends:");
+            const expertPredictions = extractBetween("- 📈 Expert Predictions & Trends:", "- 📈 Characterization:");
+            const characterization = extractBetween("- 📈 Characterization:", null);
+
+            console.log("🔄 Step 4: Mapping aggregated response into structured fields...");
             const structuredResponse: AnalysisResult = {
-                winProbability: aggregatorData["Win Probability"] || "No data available",
-                bestBet: aggregatorData["Best Bet"] || "No data available",
-                fixtureDetails: aggregatorData["Fixture Details"] || "No data available",
-                recentForm: aggregatorData["Recent Form"] || "No data available",
-                headToHead: aggregatorData["Head-to-Head Record"] || "No data available",
-                injuryUpdates: aggregatorData["Injury & Squad Updates"] || "No data available",
-                homeAwayImpact: aggregatorData["Home/Away Impact"] || "No data available",
-                tacticalInsights: aggregatorData["Tactical Insights"] || "No data available",
-                bettingMarketMovement: aggregatorData["Betting Market Movement"] || "No data available",
-                expertPredictions: aggregatorData["Expert Predictions"] || "No data available",
-                characterization: aggregatorData["Characterization"] || "No data available",
+                winProbability,
+                bestBet,
+                fixtureDetails,
+                recentForm,
+                headToHead,
+                injuryUpdates,
+                homeAwayImpact,
+                tacticalInsights,
+                bettingMarketMovement,
+                expertPredictions,
+                characterization,
+                fullText: fullResponse,
             };
 
             console.log("💰 Step 5: Updating user balance and free prediction count...");
@@ -81,8 +126,6 @@ export function useAnalysis() {
             if (updateData.error) {
                 console.warn("⚠️ Warning: Failed to update usage:", updateData.error);
             }
-
-            // Merge updated balance and free prediction count into the structured response
             structuredResponse.updatedBalance = updateData.updatedBalance ?? 0;
             structuredResponse.freePredictionCount = updateData.freePredictionCount ?? 0;
 
@@ -96,5 +139,5 @@ export function useAnalysis() {
         }
     }
 
-    return { finalResult, loading, setLoading, error, analyze };
+    return { finalResult, loading, error, analyze };
 }
