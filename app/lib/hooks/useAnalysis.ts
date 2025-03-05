@@ -70,8 +70,8 @@ export function useAnalysis() {
             console.log("🔗 Citations:", aggregatorCitations);
 
             // Split aggregated text into game blocks.
-            // We assume that each game block starts with a pattern like "**1. " (for game 1, 2, etc.)
-            const gameBlocks = aggregated.split(/(?=\*\*\d+\.\s)/g).map((b) => b.trim()).filter(Boolean);
+            // We assume that each game block starts with a pattern like "🏆 Game Title:" (for game 1, 2, etc.)
+            const gameBlocks = aggregated?.split(/(?=🏆 Game Title:)/g).map((b: string) => b.trim()).filter(Boolean);
             console.log("🔎 Game Blocks Found:", gameBlocks.length);
             gameBlocks.forEach((block, index) => console.log(`Game Block ${index + 1}:\n${block}\n---------------------`));
 
