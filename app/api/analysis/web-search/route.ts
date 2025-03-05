@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PROMPTS } from '../../../lib/prompts';
 
-/**
- * Calls Perplexity AI for sports betting insights and returns raw results.
- */
+export async function POST(req: NextRequest) {
+    try {
+        const { userInput } = await req.json();
+        if (!userInput) {
+            return NextResponse.json({ error: 'No userInput provided' }, { status: 400 });
+        }
+
+        const perplexityDataArr = await fetchFromPerplexity(userInput, 2);
+
+        return NextResponse.json({ perplexityData: perplexityDataArr });
+    } catch (err: any) {
+        console.error('❌ [web-search] Route error:', err);
+        return NextResponse.json({ error: 'Internal error in web-search' }, { status: 500 });
+    }
+}
+
 async function fetchFromPerplexity(query: string, callCount: number = 2): Promise<string[]> {
     console.log(`🚀 [web-search] Fetching sports data with ${callCount} calls...`);
 
@@ -19,7 +32,7 @@ async function fetchFromPerplexity(query: string, callCount: number = 2): Promis
                 body: JSON.stringify({
                     model: 'sonar-pro',
                     messages: [
-                        { role: 'system', content: PROMPTS.WEB_SEARCH }, // Centralized prompt
+                        { role: 'system', content: PROMPTS.WEB_SEARCH },
                         { role: 'user', content: `Fetch the latest sports/betting data for: ${query}.` }
                     ]
                 }),
@@ -39,22 +52,5 @@ async function fetchFromPerplexity(query: string, callCount: number = 2): Promis
     } catch (err) {
         console.error('❌ [web-search] Error:', err);
         return ['Failed to retrieve data.'];
-    }
-}
-
-export async function POST(req: NextRequest) {
-    try {
-        const { userInput } = await req.json();
-        if (!userInput) {
-            return NextResponse.json({ error: 'No userInput provided' }, { status: 400 });
-        }
-
-        // Fetch data from Perplexity
-        const perplexityDataArr = await fetchFromPerplexity(userInput, 2);
-
-        return NextResponse.json({ perplexityData: perplexityDataArr });
-    } catch (err: any) {
-        console.error('❌ [web-search] Route error:', err);
-        return NextResponse.json({ error: 'Internal error in web-search' }, { status: 500 });
     }
 }

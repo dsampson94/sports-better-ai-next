@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
-import { callPerplexityAggregator } from '../../../lib/FinalResponseAggregator';
+import { PROMPTS } from '../../../lib/prompts';
 
 export async function POST(req: NextRequest) {
     try {
@@ -51,5 +51,38 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
         console.error("❌ [analysis-aggregator] Error:", err);
         return NextResponse.json({ error: "Internal server error in aggregator" }, { status: 500 });
+    }
+}
+
+async function callPerplexityAggregator(combinedText: string, sportsData: string): Promise<string> {
+    try {
+        const res = await fetch("https://api.perplexity.ai/chat/completions", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+                "Content-Type": "application/json",
+                Accept: "application/json"
+            },
+            body: JSON.stringify({
+                model: "sonar-pro",
+                messages: [
+                    { role: "system", content: PROMPTS.AGGREGATOR_SYSTEM },
+                    { role: "user", content: PROMPTS.AGGREGATOR_USER(combinedText, sportsData) }
+                ]
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            console.error("❌ Perplexity API Error:", JSON.stringify(data, null, 2));
+            return `❌ Error: ${data.error?.message || "Unknown Perplexity aggregator failure"}`;
+        }
+
+        console.log("✅ Perplexity Aggregated Response:", JSON.stringify(data, null, 2));
+        return data.choices?.[0]?.message?.content || "No response from Perplexity.";
+    } catch (error) {
+        console.error("❌ Aggregator Call Failed:", error);
+        return "❌ Internal Server Error in Perplexity Aggregator.";
     }
 }

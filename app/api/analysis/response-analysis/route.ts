@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MIddleAnalysisModelRegistry } from '../../../lib/MIddleAnalysisModelRegistry';
+import { PROMPTS } from '../../../lib/prompts';
 
-/**
- * Calls the enabled AI models in parallel, returning partial responses.
- * This step doesn't finalize cost or aggregator logic, so it's less likely
- * to exceed time limits, but can still be somewhat large.
- */
 export async function POST(req: NextRequest) {
     console.log("🚀 [response-analysis] Request received.");
 
@@ -20,7 +15,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 1) Filter enabled models
-        const enabledModels = MIddleAnalysisModelRegistry.filter((m) => m.enabled);
+        const enabledModels = MiddleAnalysisModelRegistry.filter((m) => m.enabled);
         console.log("🔍 [response-analysis] Enabled models count:", enabledModels.length);
         if (enabledModels.length === 0) {
             console.error("❌ [response-analysis] No AI models are enabled.");
@@ -54,3 +49,43 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal error in response-analysis" }, { status: 500 });
     }
 }
+
+export interface ModelDefinition {
+    id: string;
+    name: string;
+    enabled: boolean;
+    call: (userInput: string, perplexityResponses: string[]) => Promise<string>;
+}
+
+const MiddleAnalysisModelRegistry: ModelDefinition[] = [
+    {
+        id: "perplexity",
+        name: "Perplexity AI",
+        enabled: true,
+        call: async (userInput: string, perplexityResponses: string[]) => {
+            try {
+                const res = await fetch("https://api.perplexity.ai/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+                        "Content-Type": "application/json",
+                        Accept: "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "sonar-pro",
+                        messages: [
+                            { role: "system", content: PROMPTS.WEB_SEARCH },
+                            { role: "user", content: PROMPTS.ANALYSIS_MODEL(userInput, perplexityResponses.join("\n\n")) }
+                        ]
+                    })
+                });
+
+                const data = await res.json();
+                return data.choices?.[0]?.message?.content || "No Perplexity response";
+            } catch (error) {
+                console.error("❌ Perplexity AI Call Failed:", error);
+                return "❌ Perplexity AI Error.";
+            }
+        }
+    }
+];
