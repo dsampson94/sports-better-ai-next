@@ -92,8 +92,8 @@ export default function DashboardPage() {
             >
                 {/* Left: Logo and Title */}
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-[80px]" />
-                    <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-[100px]" />
+                    <h1 className="block md:hidden text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
                 {/* Right: Query Input, Button & User Dropdown */}
                 <div className="flex items-center space-x-4 relative">
@@ -142,10 +142,6 @@ export default function DashboardPage() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="w-full max-w-screen-xl mx-auto"
                 >
-                    <p className="mb-4 text-gray-400 text-center">
-                        Our advanced AI system leverages multiple cutting-edge models and real-time web searches to compare diverse analytical insights and live market trends, delivering the most accurate and actionable betting prediction.
-                    </p>
-
                     {errorMsg && (
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
