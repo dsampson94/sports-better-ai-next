@@ -102,7 +102,7 @@ export default function DashboardPage() {
                 initial={ { opacity: 0, y: -20 } }
                 animate={ { opacity: 1, y: 0 } }
                 transition={ { duration: 0.5 } }
-                className="bg-gray-800 p-4 flex justify-between items-center"
+                className="bg-gray-800 p-2 flex justify-between items-center"
             >
                 {/* Left: Logo and Title (only shown on larger screens) */ }
                 <div className="flex items-center space-x-3">
