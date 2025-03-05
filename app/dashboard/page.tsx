@@ -16,7 +16,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [query, setQuery] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
-    // Initialize with default values so the account info appears immediately without flashing
+    // Initialize with default values so that the account info appears immediately without flashing
     const [userProfile, setUserProfile] = useState<UserProfile>({
         email: '',
         username: '',
@@ -47,6 +47,7 @@ export default function DashboardPage() {
                 setProfileLoading(false);
             }
         }
+
         fetchUserProfile();
     }, [router]);
 
@@ -73,151 +74,182 @@ export default function DashboardPage() {
         await analyze(query);
     }
 
-    // Toggle for user dropdown
+    // New handler for the "Get Best Bets" button
+    async function handleBestBets(e: FormEvent) {
+        e.preventDefault();
+        setErrorMsg('');
+
+        if (!isDeltaAlpha) {
+            setErrorMsg('Under Construction, come back soon!');
+            return;
+        }
+        // Trigger the analysis with a preset query string prompting for safe, easy money bets
+        await analyze('Get best bets');
+    }
+
+    // Handler for toggling the user dropdown
     const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-    // Logout handler
+    // Handler for logout
     const handleLogout = () => {
         router.push('/api/auth/logout');
     };
 
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col font-sans">
-            {/* HEADER */}
+            {/* HEADER */ }
             <motion.header
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                initial={ { opacity: 0, y: -20 } }
+                animate={ { opacity: 1, y: 0 } }
+                transition={ { duration: 0.5 } }
                 className="bg-gray-800 p-4 flex justify-between items-center"
             >
-                {/* Left: Logo and Title */}
+                {/* Left: Logo and Title (only shown on larger screens) */ }
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-[120px]" />
-                    <h1 className="lg:block hidden text-xl font-bold">SportsBetter AI 🏆</h1>
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-[120px]"/>
+                    <h1 className="hidden lg:block text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
-                {/* Right: Query Input, Button & User Dropdown */}
-                <div className="flex items-center space-x-4 relative">
-                    {/* User Info Dropdown */}
-                    <div className="relative">
-                        <button
-                            onClick={toggleDropdown}
-                            className="flex items-center space-x-1 bg-gray-700 px-3 py-2 rounded text-sm hover:bg-gray-600 transition"
+                {/* Right: User Dropdown */ }
+                <div className="relative">
+                    <button
+                        onClick={ toggleDropdown }
+                        className="flex items-center space-x-1 bg-gray-700 px-3 py-2 rounded text-sm hover:bg-gray-600 transition"
+                    >
+                        <span className="font-semibold">{ userProfile.username || userProfile.email }</span>
+                        <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
                         >
-                            <span className="font-semibold">{userProfile.username || userProfile.email}</span>
-                            <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={ 2 } d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    { dropdownOpen && (
+                        <div
+                            className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded shadow-lg z-10">
+                            <button
+                                onClick={ () => {
+                                    setDropdownOpen(false);
+                                    router.push('/add-credit');
+                                } }
+                                className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        {dropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded shadow-lg z-10">
-                                <button
-                                    onClick={() => {
-                                        setDropdownOpen(false);
-                                        router.push('/add-credit');
-                                    }}
-                                    className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm"
-                                >
-                                    Add Credit
-                                </button>
-                                <button onClick={handleLogout} className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm">
-                                    Logout
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                                Add Credit
+                            </button>
+                            <button onClick={ handleLogout }
+                                    className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm">
+                                Logout
+                            </button>
+                        </div>
+                    ) }
                 </div>
             </motion.header>
 
-            {/* MAIN CONTENT */}
+            {/* MAIN CONTENT */ }
             <main className="flex-1 py-4 px-8">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
+                    initial={ { opacity: 0, y: 20 } }
+                    animate={ { opacity: 1, y: 0 } }
+                    transition={ { duration: 0.5, delay: 0.3 } }
                     className="w-full max-w-screen-xl mx-auto"
                 >
-                    {errorMsg && (
+                    { errorMsg && (
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
+                            initial={ { scale: 0.9, opacity: 0 } }
+                            animate={ { scale: 1, opacity: 1 } }
                             className="bg-red-700 p-3 rounded mb-4 text-red-100 text-center"
                         >
-                            {errorMsg}
+                            { errorMsg }
                         </motion.div>
-                    )}
+                    ) }
 
-                    <form onSubmit={handleAnalyze} className="space-y-4  mb-6">
+                    {/* Input Form */ }
+                    <form
+                        onSubmit={ handleAnalyze }
+                        className="flex flex-col md:flex-row md:items-start md:space-x-2 mb-6"
+                    >
                         <motion.textarea
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none"
-                            rows={4}
+                            initial={ { opacity: 0, y: 10 } }
+                            animate={ { opacity: 1, y: 0 } }
+                            className="flex-1 px-3 py-2 rounded bg-gray-800 border border-gray-700 focus:outline-none text-sm"
+                            rows={ 4 }
                             placeholder="e.g. 'Who will likely win the next big rugby match?'"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            value={ query }
+                            onChange={ (e) => setQuery(e.target.value) }
                         />
-                        <motion.button
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.95 }}
-                            type="submit"
-                            disabled={loading || !isDeltaAlpha}
-                            className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold w-full"
-                        >
-                            {isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get AI Prediction') : 'Under Construction, come back soon!'}
-                        </motion.button>
+                        <div className="flex flex-col md:flex-row md:space-x-2 mt-2 md:mt-0">
+                            <motion.button
+                                whileHover={ { scale: 1.05 } }
+                                whileTap={ { scale: 0.95 } }
+                                type="submit"
+                                disabled={ loading || !isDeltaAlpha }
+                                className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold text-sm"
+                            >
+                                { isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Prediction') : 'Come back soon!' }
+                            </motion.button>
+                            <motion.button
+                                whileHover={ { scale: 1.05 } }
+                                whileTap={ { scale: 0.95 } }
+                                onClick={ handleBestBets }
+                                disabled={ loading || !isDeltaAlpha }
+                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-semibold text-sm"
+                            >
+                                Get Best Bets
+                            </motion.button>
+                        </div>
                     </form>
 
-                    {/* Render Aggregated Intro if available */}
-                    {finalResult && finalResult.aggregatedIntro && (
+                    {/* Render Aggregated Intro if available */ }
+                    { finalResult && finalResult.aggregatedIntro && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
+                            initial={ { opacity: 0, y: 10 } }
+                            animate={ { opacity: 1, y: 0 } }
+                            transition={ { duration: 0.5 } }
                             className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md mb-8"
                         >
                             <h3 className="text-xl font-bold text-blue-300 mb-2">Overview</h3>
-                            <p className="text-gray-300 whitespace-pre-wrap">{finalResult.aggregatedIntro}</p>
+                            <p className="text-gray-300 whitespace-pre-wrap">{ finalResult.aggregatedIntro }</p>
                         </motion.div>
-                    )}
+                    ) }
 
-                    {/* Render Game Prediction Blocks */}
-                    {finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
+                    {/* Render Game Prediction Blocks */ }
+                    { finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
-                            {finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
-                                <PredictionBlock key={idx} prediction={prediction} />
-                            ))}
+                            { finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
+                                <PredictionBlock key={ idx } prediction={ prediction }/>
+                            )) }
 
-                            {/* Render Citations Once at the Bottom */}
-                            {finalResult.predictions[0].citations &&
+                            {/* Render Citations Once at the Bottom */ }
+                            { finalResult.predictions[0].citations &&
                                 finalResult.predictions[0].citations.length > 0 && (
                                     <motion.div
-                                        whileHover={{ scale: 1.02 }}
+                                        whileHover={ { scale: 1.02 } }
                                         className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
                                     >
-                                        <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations (All Games)</h3>
+                                        <h3 className="text-lg font-bold mb-2 text-purple-400">
+                                            🔗 Citations (All Games)
+                                        </h3>
                                         <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                                            {finalResult.predictions[0].citations.map((cite, cIdx) => (
-                                                <li key={cIdx}>{cite}</li>
-                                            ))}
+                                            { finalResult.predictions[0].citations.map((cite, cIdx) => (
+                                                <li key={ cIdx }>{ cite }</li>
+                                            )) }
                                         </ul>
                                     </motion.div>
-                                )}
+                                ) }
                         </div>
-                    )}
+                    ) }
 
-                    {error && <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>}
+                    { error && (
+                        <motion.div className="mt-4 text-red-400 text-center">{ error }</motion.div>
+                    ) }
                 </motion.div>
             </main>
 
-            {/* FOOTER */}
+            {/* FOOTER */ }
             <footer className="bg-gray-800 p-4 text-center text-gray-500 text-sm">
-                &copy; {new Date().getFullYear()} SportsBetter AI
+                &copy; { new Date().getFullYear() } SportsBetter AI
             </footer>
         </div>
     );
@@ -234,43 +266,43 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            initial={ { opacity: 0, scale: 0.95 } }
+            animate={ { opacity: 1, scale: 1 } }
+            transition={ { duration: 0.5 } }
             className="bg-gray-800 p-6 rounded shadow-lg w-full"
         >
-            <h2 className="text-2xl font-bold text-blue-300 mb-1">{prediction.gameTitle}</h2>
-            {prediction.competition && (
-                <p className="text-sm text-gray-400 mb-3">Competition: {prediction.competition}</p>
-            )}
-            {isIntroBlock ? (
-                <p className="text-gray-300 whitespace-pre-wrap">{prediction.fullText}</p>
+            <h2 className="text-2xl font-bold text-blue-300 mb-1">{ prediction.gameTitle }</h2>
+            { prediction.competition && (
+                <p className="text-sm text-gray-400 mb-3">Competition: { prediction.competition }</p>
+            ) }
+            { isIntroBlock ? (
+                <p className="text-gray-300 whitespace-pre-wrap">{ prediction.fullText }</p>
             ) : (
                 <>
                     <button
                         className="mb-4 bg-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-600 transition"
-                        onClick={() => setCollapsed(!collapsed)}
+                        onClick={ () => setCollapsed(!collapsed) }
                     >
-                        {collapsed ? 'Show Details' : 'Hide Details'}
+                        { collapsed ? 'Show Details' : 'Hide Details' }
                     </button>
-                    {!collapsed && (
+                    { !collapsed && (
                         <>
-                            {/* Final Prediction */}
+                            {/* Final Prediction */ }
                             <motion.div
-                                whileHover={{ scale: 1.02 }}
+                                whileHover={ { scale: 1.02 } }
                                 className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
                             >
                                 <h3 className="text-xl font-bold mb-2 text-green-400">✅ Final Prediction</h3>
                                 <p className="text-gray-300">
-                                    <strong>Win Probability:</strong> {prediction.winProbability}
+                                    <strong>Win Probability:</strong> { prediction.winProbability }
                                 </p>
                                 <p className="text-gray-300">
-                                    <strong>Best Bet:</strong> {prediction.bestBet}
+                                    <strong>Best Bet:</strong> { prediction.bestBet }
                                 </p>
                             </motion.div>
-                            {/* Key Stats & Trends */}
+                            {/* Key Stats & Trends */ }
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {[
+                                { [
                                     { title: '📅 Fixture Details', data: prediction.fixtureDetails },
                                     { title: '📊 Recent Form', data: prediction.recentForm },
                                     { title: '🔄 Head-to-Head', data: prediction.headToHead },
@@ -283,27 +315,29 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                                     { title: '🎯 Overall Recommendation', data: prediction.overallRecommendation },
                                 ].map((item, i) => (
                                     <motion.div
-                                        key={i}
-                                        whileHover={{ scale: 1.03 }}
+                                        key={ i }
+                                        whileHover={ { scale: 1.03 } }
                                         className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
                                     >
-                                        <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
-                                        <p className="text-gray-300">{item.data || ''}</p>
+                                        <h4 className="text-md font-semibold text-yellow-400">{ item.title }</h4>
+                                        <p className="text-gray-300">{ item.data || '' }</p>
                                     </motion.div>
-                                ))}
+                                )) }
                             </div>
-                            {/* Full AI Response */}
+                            {/* Full AI Response */ }
                             <motion.div
-                                whileHover={{ scale: 1.02 }}
+                                whileHover={ { scale: 1.02 } }
                                 className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
                             >
                                 <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
-                                <pre className="text-sm whitespace-pre-wrap text-gray-300">{prediction.fullText}</pre>
+                                <pre className="text-sm whitespace-pre-wrap text-gray-300">
+                  { prediction.fullText }
+                </pre>
                             </motion.div>
                         </>
-                    )}
+                    ) }
                 </>
-            )}
+            ) }
         </motion.div>
     );
 };
