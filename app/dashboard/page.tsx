@@ -106,7 +106,7 @@ export default function DashboardPage() {
             >
                 {/* Left: Logo and Title (only shown on larger screens) */ }
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-[120px]"/>
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-[110px]"/>
                     <h1 className="hidden lg:block text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
                 {/* Right: User Dropdown */ }
