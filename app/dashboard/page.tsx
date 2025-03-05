@@ -81,7 +81,7 @@ export default function DashboardPage() {
             >
                 {/* Left: Logo and Title */}
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-18" />
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-1/2" />
                 </div>
                 {/* Right: Query Input, Button & User Dropdown */}
                 <div className="flex items-center space-x-4 relative">
