@@ -80,7 +80,7 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
         - 📊 Recent Form: Last 5 Matches (Wins, Draws, Losses)
         - 🔄 Head-to-Head Record: Last 5 Meetings
         - 🚑 Injury & Squad Updates: Key Absences & Returning Players
-        - 🌍 Home/Away Impact: Performance at Venue & likliness of significant impact
+        - 🌍 Home/Away Impact: Performance at Venue & likelihood of significant impact
         - 🔥 Tactical Insights: Expected play styles, approaches to the game & deep strategic & tactical analysis
         - 💰 Betting Market Movement: Full analysis on the betting markets position on the game and each team.
         - 💡 Expert Predictions & Trends: Insights from Analysts.
@@ -107,21 +107,21 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
         - Start each response with the "🔮" emoji - This is how we know that the first block is not a game prediction and must have its own UI.
         - EACH 'Key Stats & Trends:' BULLET POINT MUST HAVE AT LEAST 2 SENTENCES. Insightful and informative.
 
-        🏆 Game Title: [Team A] vs [Team B] | [Competition Name]
-        ✅ Final Prediction & Betting Insights:
-            - Win Probability (%): [Team A] X% | [Team B] Y%
-            - Best Bet: [Recommended Bet]
-            - Key Stats & Trends:
-                - 📅 Fixture Details: Date, Venue, Time
-                - 📊 Recent Form: Last 5 Matches (Wins, Draws, Losses)
-                - 🔄 Head-to-Head Record: Last 5 Meetings
-                - 🚑 Injury & Squad Updates: Key Absences & Returning Players
-                - 🌍 Home/Away Impact: Performance at Venue & likliness of significant impact
-                - 🔥 Tactical Insights: Expected play styles, approaches to the game & deep strategic & tactical analysis
-                - 💰 Betting Market Movement: Full analysis on the betting markets position on the game and each team.
-                - 💡 Expert Predictions & Trends: Insights from Analysts.
-                - 📝 Characterization: A broad characterization of each team and the match.
-                - 🎯 Overall Recommendation: A data-driven suggestion determining if you should place a bet and what the optimal bets are for the match.
+🏆 Game Title: [Team A] vs [Team B] | [Competition Name]
+✅ Final Prediction & Betting Insights:
+    - Win Probability (%): [Team A] X% | [Team B] Y%
+    - Best Bet: [Recommended Bet]
+    - Key Stats & Trends:
+        - 📅 Fixture Details: Date, Venue, Time
+        - 📊 Recent Form: Last 5 Matches (Wins, Draws, Losses)
+        - 🔄 Head-to-Head Record: Last 5 Meetings
+        - 🚑 Injury & Squad Updates: Key Absences & Returning Players
+        - 🌍 Home/Away Impact: Performance at Venue & likelihood of significant impact
+        - 🔥 Tactical Insights: Expected play styles, approaches to the game & deep strategic & tactical analysis
+        - 💰 Betting Market Movement: Full analysis on the betting markets position on the game and each team.
+        - 💡 Expert Predictions & Trends: Insights from Analysts.
+        - 📝 Characterization: A broad characterization of each team and the match.
+        - 🎯 Overall Recommendation: A data-driven suggestion determining if you should place a bet and what the optimal bets are for the match.
     `,
 
 };
