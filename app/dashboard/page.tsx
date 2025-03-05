@@ -5,6 +5,7 @@ import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { logout } from '../lib/auth';
+import SubscriptionModal from './SubscriptionModal';
 
 interface UserProfile {
     email: string;
@@ -26,6 +27,7 @@ export default function DashboardPage() {
     });
     const [profileLoading, setProfileLoading] = useState(true);
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
     const { finalResult, loading, error, analyze } = useAnalysis();
 
@@ -112,6 +114,14 @@ export default function DashboardPage() {
                 </div>
                 {/* Right: User Icon Dropdown */ }
                 <div className="relative">
+                    {!profileLoading && (
+                        <button
+                            onClick={() => setShowSubscriptionModal(true)}
+                            className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150"
+                        >
+                            Subscribe
+                        </button>
+                    )}
                     <button
                         onClick={ toggleDropdown }
                         className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700
@@ -292,6 +302,10 @@ export default function DashboardPage() {
                     ) }
                 </motion.div>
             </main>
+
+            {showSubscriptionModal && (
+                <SubscriptionModal onClose={() => setShowSubscriptionModal(false)} />
+            )}
 
             {/* FOOTER */ }
             <footer className="bg-gray-800 p-4 text-center text-gray-500 text-sm">
