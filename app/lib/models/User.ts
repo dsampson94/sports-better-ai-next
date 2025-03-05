@@ -6,7 +6,6 @@ export interface IUser extends Document {
     email: string;
     password?: string;
     role: "USER" | "ADMIN";
-    voiceNotes: mongoose.Types.ObjectId[];
     balance: number;
     subscriptionStatus: "active" | "inactive" | "expired";
     subscriptionPlan: "basic" | "standard" | "premium" | "none";
@@ -31,7 +30,6 @@ const UserSchema: Schema<IUser> = new Schema(
         email: { type: String, required: true, unique: true },
         password: { type: String, required: false },
         role: { type: String, enum: ["USER", "ADMIN"], default: "USER" },
-        voiceNotes: [{ type: Schema.Types.ObjectId, ref: "VoiceNote" }],
         balance: { type: Number, default: 0 },
         subscriptionStatus: { type: String, enum: ["active", "inactive", "expired"], default: "inactive" },
         subscriptionPlan: { type: String, enum: ["basic", "standard", "premium", "none"], default: "none" },
@@ -40,25 +38,17 @@ const UserSchema: Schema<IUser> = new Schema(
         autoRenew: { type: Boolean, default: true },
         usageCountThisMonth: { type: Number, default: 0 },
         freePredictionCount: { type: Number, default: 0 },
-        aiCallAllowance: { type: Number, default: 0 }, // AI calls allocated per month
+        aiCallAllowance: { type: Number, default: 0 },
     },
     { timestamps: true }
 );
 
-// Define AI Call Allocation based on Subscription Plans
-UserSchema.methods.allocateAICalls = function () {
-    switch (this.subscriptionPlan) {
-        case "basic":
-            this.aiCallAllowance = 50; // Example: 50 AI calls per month
-            break;
-        case "standard":
-            this.aiCallAllowance = 100; // Example: 100 AI calls per month
-            break;
-        case "premium":
-            this.aiCallAllowance = 200; // Example: 200 AI calls per month
-            break;
-        default:
-            this.aiCallAllowance = 0; // Free plan gets no AI calls
+// Method to decrement AI calls
+UserSchema.methods.decrementAICalls = async function () {
+    if (this.aiCallAllowance > 0) {
+        this.aiCallAllowance -= 1;
+        await this.save();
+        console.log(`🔽 AI Calls decremented for ${this.email}. Remaining: ${this.aiCallAllowance}`);
     }
 };
 

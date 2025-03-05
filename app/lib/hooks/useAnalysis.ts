@@ -22,11 +22,12 @@ export interface GamePrediction {
     citations?: string[];
     updatedBalance?: number;
     freePredictionCount?: number;
+    aiCallAllowance?: number;
 }
 
 export interface AnalysisResult {
     predictions: GamePrediction[];
-    aggregatedIntro: string; // the non-game intro text (must start with 🔮)
+    aggregatedIntro: string;
 }
 
 export function useAnalysis() {
@@ -40,6 +41,23 @@ export function useAnalysis() {
         setError('');
 
         try {
+            // Check if user has enough AI calls or balance before making requests
+            const updateRes = await fetch('/api/user/update-usage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            const updateData = await updateRes.json();
+
+            if (updateData.error) {
+                throw new Error(updateData.error);
+            }
+
+            const { updatedBalance, aiCallAllowance } = updateData;
+
+            if (aiCallAllowance <= 0 && updatedBalance <= 0) {
+                throw new Error('Insufficient AI calls and balance. Please purchase tokens.');
+            }
+
             // Fetch web search data
             const webSearchRes = await fetch('/api/analysis/web-search', {
                 method: 'POST',
@@ -69,48 +87,24 @@ export function useAnalysis() {
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
-            // Safely extract the final answer text
-            let aggregated = '';
-            if (
-                aggregatorData &&
-                typeof aggregatorData.finalAnswer === 'object' &&
-                typeof aggregatorData.finalAnswer.finalAnswer === 'string'
-            ) {
-                aggregated = aggregatorData.finalAnswer.finalAnswer;
-            } else if (typeof aggregatorData.finalAnswer === 'string') {
-                aggregated = aggregatorData.finalAnswer;
-            }
-            aggregated = aggregated || '';
+            let aggregated = aggregatorData.finalAnswer.finalAnswer || aggregatorData.finalAnswer || '';
 
-            console.log('📝 Full Aggregated Text:\n', aggregated);
-
-            // Also capture citations from aggregator
-            const aggregatorCitations = aggregatorData.citations || [];
-            console.log('🔗 Citations:', aggregatorCitations);
-
-            // Split the aggregated text into intro and game blocks.
+            // Split text
             let introText = '';
             let gameText = aggregated;
             const splitIndex = aggregated.indexOf('🏆 Game Title:');
             if (splitIndex !== -1) {
                 introText = aggregated.slice(0, splitIndex).trim();
-                // Ensure the intro starts with the 🔮 emoji. Otherwise, discard it.
                 if (!introText.startsWith('🔮')) {
                     introText = '';
                 }
                 gameText = aggregated.slice(splitIndex);
             }
 
-            // Split gameText into blocks. We assume each game block starts with "🏆 Game Title:"
             const gameBlocks = gameText
                 .split(/(?=🏆 Game Title:)/g)
                 .map((b: string) => b.trim())
                 .filter(Boolean);
-
-            console.log('🔎 Game Blocks Found:', gameBlocks.length);
-            gameBlocks.forEach((block, index) => {
-                console.log(`Game Block ${ index + 1 }:\n${ block }\n---------------------`);
-            });
 
             function extractBetween(text: string, start: string, end: string | null): string {
                 const colonOpt = '\\s*:?';
@@ -169,24 +163,10 @@ export function useAnalysis() {
                     characterization,
                     overallRecommendation,
                     fullText: block,
-                    citations: aggregatorCitations,
+                    citations: aggregatorData.citations || [],
+                    updatedBalance,
+                    freePredictionCount: aiCallAllowance,
                 };
-            });
-
-            console.log('🔄 Parsed Predictions:', predictions);
-
-            // Update usage data
-            const updateRes = await fetch('/api/user/update-usage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            const updateData = await updateRes.json();
-            if (updateData.error) {
-                console.warn('⚠️ Usage update error:', updateData.error);
-            }
-            predictions.forEach((p) => {
-                p.updatedBalance = updateData.updatedBalance ?? 0;
-                p.freePredictionCount = updateData.freePredictionCount ?? 0;
             });
 
             setFinalResult({ predictions, aggregatedIntro: introText });

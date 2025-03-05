@@ -2,62 +2,43 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
-// Import the Transaction model
-import Transaction, { ITransaction } from "../../../lib/models/Transaction";
+import { SUBSCRIPTION_PLANS } from '../../payfast/notify/route';
 
 export async function POST(req: NextRequest) {
     try {
-        // Authenticate user via token in cookies
         const token = req.cookies.get("sportsbet_token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
         let decoded: any;
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET!);
         } catch {
             return NextResponse.json({ error: "Invalid token" }, { status: 401 });
         }
+
         await connectToDatabase();
         const user = await User.findOne({ email: decoded.email });
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
+        if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-        // Apply cost logic:
-        // - First 3 analyses are free.
-        // - After that, each analysis costs $0.50.
-        const freeCount = user.freePredictionCount || 0;
-        const cost = freeCount < 3 ? 0 : 0.50;
-        if (cost > 0 && (user.balance || 0) < cost) {
-            return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
-        }
+        const plan = SUBSCRIPTION_PLANS[user.subscriptionPlan as keyof typeof SUBSCRIPTION_PLANS];
+        const costPerCall = plan ? (plan.price / plan.aiCalls) : 0.50;
 
-        let transactionDescription = "";
-        if (freeCount < 3) {
-            user.freePredictionCount = freeCount + 1;
-            transactionDescription = "Free analysis usage recorded";
+        if (user.aiCallAllowance > 0) {
+            user.aiCallAllowance -= 1;
         } else {
-            user.balance = (user.balance || 0) - cost;
-            transactionDescription = "Analysis usage deduction of $0.50";
+            if (user.balance < costPerCall) {
+                return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
+            }
+            user.balance -= costPerCall;
         }
-        await user.save();
 
-        // Create and save a transaction log for this usage
-        const transaction: ITransaction = new Transaction({
-            user: user._id,
-            amount: cost,
-            type: cost > 0 ? 'debit' : 'credit',
-            description: transactionDescription,
-        });
-        await transaction.save();
+        await user.save();
 
         return NextResponse.json({
             updatedBalance: user.balance,
-            freePredictionCount: user.freePredictionCount,
+            aiCallAllowance: user.aiCallAllowance
         });
     } catch (err: any) {
-        console.error("❌ [update-usage] Error:", err);
         return NextResponse.json({ error: "Internal error updating usage" }, { status: 500 });
     }
 }

@@ -12,6 +12,7 @@ interface UserProfile {
     username?: string;
     balance: number;
     freePredictionCount: number;
+    aiCallAllowance: number;
 }
 
 export default function DashboardPage() {
@@ -24,6 +25,7 @@ export default function DashboardPage() {
         username: '',
         balance: 0,
         freePredictionCount: 0,
+        aiCallAllowance: 0
     });
     const [profileLoading, setProfileLoading] = useState(true);
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -42,6 +44,7 @@ export default function DashboardPage() {
                     username: data.username || '',
                     balance: data.balance ?? 0,
                     freePredictionCount: data.freePredictionCount ?? 0,
+                    aiCallAllowance: data.aiCallAllowance ?? 0,
                 });
             } catch (err) {
                 console.error('Unauthorized access:', err);
@@ -68,15 +71,21 @@ export default function DashboardPage() {
 
         const freeCalls = userProfile.freePredictionCount;
         const balance = userProfile.balance;
+        const aiCalls = userProfile.aiCallAllowance;
         const costPerCall = 0.5;
 
-        if (freeCalls >= 3 && balance < costPerCall) {
-            setErrorMsg(
-                'You have used your free predictions and do not have enough balance. Please add credits.'
-            );
+        if (aiCalls === 0 && balance < costPerCall) {
+            setErrorMsg('You have used all your AI calls and do not have enough balance. Please add credits.');
             return;
         }
+
         await analyze(query);
+
+        // Deduct AI Call Allowance on Successful Request
+        setUserProfile(prev => ({
+            ...prev,
+            aiCallAllowance: Math.max(0, prev.aiCallAllowance - 1), // Ensure it never goes below zero
+        }));
     }
 
     // "Get Best Bets" button handler
@@ -114,14 +123,14 @@ export default function DashboardPage() {
                 </div>
                 {/* Right: User Icon Dropdown */ }
                 <div className="relative">
-                    {!profileLoading && (
+                    { !profileLoading && (
                         <button
-                            onClick={() => setShowSubscriptionModal(true)}
+                            onClick={ () => setShowSubscriptionModal(true) }
                             className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150"
                         >
-                            Subscribe
+                            Get Tokens
                         </button>
-                    )}
+                    ) }
                     <button
                         onClick={ toggleDropdown }
                         className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700
@@ -158,7 +167,7 @@ export default function DashboardPage() {
                                     <strong>Balance:</strong> ${ userProfile.balance.toFixed(2) }
                                 </p>
                                 <p className="text-sm text-gray-300">
-                                    <strong>Free Calls Used:</strong> { userProfile.freePredictionCount }/3
+                                    <strong>AI Calls Remaining:</strong> { userProfile.aiCallAllowance }
                                 </p>
                             </div>
                             <div className="border-t border-gray-700">
@@ -178,7 +187,7 @@ export default function DashboardPage() {
                                     </button>
                                 }
                                 <button
-                                    onClick={logout}
+                                    onClick={ logout }
                                     className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
                                 >
                                     Logout
@@ -232,20 +241,24 @@ export default function DashboardPage() {
                                 whileHover={ { scale: 1.02 } }
                                 whileTap={ { scale: 0.95 } }
                                 type="submit"
-                                disabled={ loading || !isDeltaAlpha }
-                                className="bg-green-600 hover:bg-green-500 px-4 py-2
-               rounded-lg text-white font-semibold text-sm
-               transition-colors ease-in-out duration-150
-               w-auto"
+                                disabled={ userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5 }
+                                className={ `
+        px-4 py-2 rounded-lg font-semibold text-sm transition 
+        ${ userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5
+                                    ? 'bg-gray-500 cursor-not-allowed text-gray-300'
+                                    : 'bg-green-600 hover:bg-green-500 text-white' }
+    ` }
                             >
-                                { isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Predictions') : 'Come back soon!' }
+                                { userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5
+                                    ? 'Get More Tokens'
+                                    : (loading ? 'Analyzing...' : 'Get Predictions') }
                             </motion.button>
 
                             <motion.button
                                 whileHover={ { scale: 1.02 } }
                                 whileTap={ { scale: 0.95 } }
                                 onClick={ handleBestBets }
-                                disabled={ loading || !isDeltaAlpha }
+                                disabled={ loading || (!userProfile.freePredictionCount && userProfile.balance < 0.5) }
                                 className="bg-blue-600 hover:bg-blue-500 px-4 py-2
                rounded-lg text-white font-semibold text-sm
                transition-colors ease-in-out duration-150
@@ -303,9 +316,9 @@ export default function DashboardPage() {
                 </motion.div>
             </main>
 
-            {showSubscriptionModal && (
-                <SubscriptionModal onClose={() => setShowSubscriptionModal(false)} />
-            )}
+            { showSubscriptionModal && (
+                <SubscriptionModal onClose={ () => setShowSubscriptionModal(false) }/>
+            ) }
 
             {/* FOOTER */ }
             <footer className="bg-gray-800 p-4 text-center text-gray-500 text-sm">

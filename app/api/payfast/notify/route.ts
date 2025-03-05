@@ -3,6 +3,7 @@ import crypto from "crypto";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
 import querystring from "querystring";
+import axios from "axios";
 
 // Disable Next.js body parsing for x-www-form-urlencoded data
 export const config = {
@@ -16,58 +17,51 @@ export async function POST(req: NextRequest) {
     try {
         console.log("🚀 Notify route called");
 
-        // Read raw ITN data as text (PayFast sends x-www-form-urlencoded)
+        // Read ITN data
         const rawBody = await req.text();
         console.log("🔔 Raw ITN Data:", rawBody);
 
-        // Parse the raw body into an object
         const data = querystring.parse(rawBody) as Record<string, string>;
         console.log("✅ Parsed ITN Data:", data);
 
-        // Check that email_address is present
         if (!data.email_address) {
-            console.error("❌ Missing email_address in ITN data");
+            console.error("❌ Missing email_address");
             return NextResponse.json({ error: "Missing email_address" }, { status: 200 });
         }
-        console.log("✅ Retrieved email:", data.email_address);
 
         // Verify PayFast signature
         const passphrase = process.env.PAYFAST_PASSPHRASE || "";
         const expectedSignature = generateSignature(data, passphrase);
         if (data.signature !== expectedSignature) {
-            console.error("❌ Invalid signature. Expected:", expectedSignature, "Received:", data.signature);
+            console.error("❌ Invalid signature");
             return NextResponse.json({ error: "Invalid signature" }, { status: 200 });
         }
 
-        // Ensure payment was successful
         if (data.payment_status !== "COMPLETE") {
-            console.error("❌ Payment not completed:", data.payment_status);
+            console.error("❌ Payment not completed");
             return NextResponse.json({ error: "Payment not completed" }, { status: 200 });
         }
 
-        // Connect to the database
         await connectToDatabase();
-
-        // Find the user by the email address provided
         const user = await User.findOne({ email: data.email_address });
         if (!user) {
-            console.error("❌ User not found for email:", data.email_address);
+            console.error("❌ User not found");
             return NextResponse.json({ error: "User not found" }, { status: 200 });
         }
 
-        // Parse the paid amount from amount_gross
         const amountPaid = parseFloat(data.amount_gross);
         if (isNaN(amountPaid)) {
-            console.error("❌ Invalid amount_gross:", data.amount_gross);
+            console.error("❌ Invalid amount_gross");
             return NextResponse.json({ error: "Invalid amount" }, { status: 200 });
         }
 
-        // Update user's balance
-        user.balance = (user.balance || 0) + amountPaid;
-        await user.save();
-        console.log(`✅ Updated balance for ${user.email}: New Balance = ${user.balance}`);
+        // Call `update-subscription.ts` to handle the subscription update logic
+        await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/user/update-subscription`, {
+            amountPaid,
+        }, {
+            headers: { Cookie: `sportsbet_token=${req.cookies.get("sportsbet_token")?.value}` }
+        });
 
-        // Respond with HTTP 200 OK to acknowledge receipt of ITN
         return NextResponse.json({ success: true }, { status: 200 });
     } catch (error: any) {
         console.error("❌ Error handling PayFast ITN:", error);
@@ -75,7 +69,7 @@ export async function POST(req: NextRequest) {
     }
 }
 
-// Helper: Generate PayFast signature using fixed parameter order including empty fields
+// Helper: Generate PayFast signature
 function generateSignature(data: Record<string, string>, passphrase: string) {
     const paramOrder = [
         "m_payment_id",
@@ -86,16 +80,6 @@ function generateSignature(data: Record<string, string>, passphrase: string) {
         "amount_gross",
         "amount_fee",
         "amount_net",
-        "custom_str1",
-        "custom_str2",
-        "custom_str3",
-        "custom_str4",
-        "custom_str5",
-        "custom_int1",
-        "custom_int2",
-        "custom_int3",
-        "custom_int4",
-        "custom_int5",
         "name_first",
         "name_last",
         "email_address",
@@ -104,7 +88,6 @@ function generateSignature(data: Record<string, string>, passphrase: string) {
 
     let paramString = "";
     for (const key of paramOrder) {
-        // Always include key even if its value is empty
         const value = data[key] || "";
         paramString += `${key}=${encodeURIComponent(value.trim()).replace(/%20/g, "+")}&`;
     }
