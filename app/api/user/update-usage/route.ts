@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
+// Import the Transaction model
+import Transaction, { ITransaction } from "../../../lib/models/Transaction";
 
 export async function POST(req: NextRequest) {
     try {
@@ -31,12 +33,24 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
         }
 
+        let transactionDescription = "";
         if (freeCount < 3) {
             user.freePredictionCount = freeCount + 1;
+            transactionDescription = "Free analysis usage recorded";
         } else {
             user.balance = (user.balance || 0) - cost;
+            transactionDescription = "Analysis usage deduction of $0.50";
         }
         await user.save();
+
+        // Create and save a transaction log for this usage
+        const transaction: ITransaction = new Transaction({
+            user: user._id,
+            amount: cost,
+            type: cost > 0 ? 'debit' : 'credit',
+            description: transactionDescription,
+        });
+        await transaction.save();
 
         return NextResponse.json({
             updatedBalance: user.balance,

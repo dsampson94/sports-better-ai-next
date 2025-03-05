@@ -165,6 +165,11 @@ export default function DashboardPage() {
                                 >
                                     Add Credit
                                 </button>
+                                { isDeltaAlpha &&
+                                    <button onClick={ () => router.push('/dashboard/admin') }
+                                            className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition">
+                                        Admin Dashboard
+                                    </button> }
                                 <button
                                     onClick={ handleLogout }
                                     className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
