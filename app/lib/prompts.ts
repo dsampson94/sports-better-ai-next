@@ -71,15 +71,15 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
 - Win Probability (%): [Team A] X% | [Team B] Y%
 - Best Bet: [Recommended Bet]
 - Key Stats & Trends:
-  - 📅 Fixture Details: Date, Venue, Time
-  - 📊 Recent Form: Last 5 Matches (Wins, Draws, Losses)
-  - 🔄 Head-to-Head Record: Last 5 Meetings
-  - 🚑 Injury & Squad Updates: Key Absences & Returning Players
-  - 🌍 Home/Away Impact: Performance at Venue
-  - 🔥 Tactical Insights: Expected Playstyles & Strategies
-  - 💰 Betting Market Movement: How Odds Have Shifted
-  - 📈 Expert Predictions & Trends: Insights from Analysts
-  - 📈 Characterization: A broad characterization of each team and the match.
+          - 📅 Fixture Details: Date, Venue, Time
+          - 📊 Recent Form: Last 5 Matches (Wins, Draws, Losses)
+          - 🔄 Head-to-Head Record: Last 5 Meetings
+          - 🚑 Injury & Squad Updates: Key Absences & Returning Players
+          - 🌍 Home/Away Impact: Performance at Venue & likliness of significant impact
+          - 🔥 Tactical Insights: Expected play styles, approaches to the game & deep strategic & tactical analysis
+          - 💰 Betting Market Movement: Full analysis on the betting markets position on the game and each team.
+          - 📈 Expert Predictions & Trends: Insights from Analysts
+          - 📈 Characterization: A broad characterization of each team and the match.
 `,
 
     AGGREGATOR_USER: (combinedText: string, sportsData: string) => `
