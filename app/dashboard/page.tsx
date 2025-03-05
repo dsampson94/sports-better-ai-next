@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
-import { useAnalysis } from "../lib/hooks/useAnalysis";
+import { useAnalysis, GamePrediction } from "../lib/hooks/useAnalysis";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -19,7 +19,7 @@ export default function DashboardPage() {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [profileLoading, setProfileLoading] = useState(true);
 
-    const { finalResult, loading, analyze } = useAnalysis();
+    const { finalResult, loading, error, analyze } = useAnalysis();
 
     useEffect(() => {
         async function fetchUserProfile() {
@@ -63,8 +63,10 @@ export default function DashboardPage() {
                 transition={{ duration: 0.5 }}
                 className="bg-gray-800 p-4 flex justify-between items-center"
             >
-                <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
-                <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
+                <div className="flex items-center space-x-3">
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
+                    <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
+                </div>
                 {!profileLoading && userProfile && (
                     <div className="text-right text-sm">
                         <p className="font-semibold">{userProfile.username || userProfile.email}</p>
@@ -106,7 +108,7 @@ export default function DashboardPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="w-full p-3 rounded bg-gray-800 border border-gray-700 focus:outline-none"
                             rows={4}
-                            placeholder="e.g. 'Who will likely win the next URC rugby match?'"
+                            placeholder="e.g. 'Who will likely win the next big rugby match?'"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />
@@ -122,56 +124,68 @@ export default function DashboardPage() {
                     </form>
 
                     {/* RESULT SECTION */}
-                    {finalResult && (
+                    {finalResult && finalResult.length > 0 && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.5 }}
                             className="mt-6 bg-gray-800 p-6 rounded space-y-6 shadow-lg"
                         >
-                            {/* 🏆 Final Prediction & Betting Insights */}
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
-                            >
-                                <h3 className="text-xl font-bold mb-2 text-green-400">🏆 Final Prediction</h3>
-                                <p className="text-gray-300"><strong>Win Probability:</strong> {finalResult.winProbability}</p>
-                                <p className="text-gray-300"><strong>Best Bet:</strong> {finalResult.bestBet}</p>
-                            </motion.div>
+                            {finalResult.map((prediction: GamePrediction, idx: number) => (
+                                <motion.div key={idx} className="mb-8">
+                                    {/* Title from aggregator text (e.g. "Ireland vs France") */}
+                                    <h2 className="text-2xl font-bold text-blue-300 mb-2">Game: {prediction.gameTitle}</h2>
 
-                            {/* 📌 Key Stats & Trends */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {[
-                                    { title: "📅 Fixture Details", data: finalResult.fixtureDetails },
-                                    { title: "📊 Recent Form", data: finalResult.recentForm },
-                                    { title: "🔄 Head-to-Head", data: finalResult.headToHead },
-                                    { title: "🚑 Injury Updates", data: finalResult.injuryUpdates },
-                                    { title: "🌍 Home/Away Impact", data: finalResult.homeAwayImpact },
-                                    { title: "🔥 Tactical Insights", data: finalResult.tacticalInsights },
-                                    { title: "💰 Betting Market Movement", data: finalResult.bettingMarketMovement },
-                                    { title: "📈 Expert Predictions", data: finalResult.expertPredictions },
-                                    { title: "📈 Characterization", data: finalResult.characterization }
-                                ].map((item, index) => (
+                                    {/* 🏆 Final Prediction & Betting Insights */}
                                     <motion.div
-                                        key={index}
-                                        whileHover={{ scale: 1.03 }}
-                                        className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
+                                        whileHover={{ scale: 1.02 }}
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
                                     >
-                                        <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
-                                        <p className="text-gray-300">{item.data || "No data available"}</p>
+                                        <h3 className="text-xl font-bold mb-2 text-green-400">🏆 Final Prediction</h3>
+                                        <p className="text-gray-300">
+                                            <strong>Win Probability:</strong> {prediction.winProbability}
+                                        </p>
+                                        <p className="text-gray-300">
+                                            <strong>Best Bet:</strong> {prediction.bestBet}
+                                        </p>
                                     </motion.div>
-                                ))}
-                            </div>
 
-                            {/* 📜 Full AI Response */}
-                            <motion.div className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md">
-                                <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
-                                <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                                    {finalResult.fullText}
-                                </pre>
-                            </motion.div>
+                                    {/* 📌 Key Stats & Trends */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                        {[
+                                            { title: "📅 Fixture Details", data: prediction.fixtureDetails },
+                                            { title: "📊 Recent Form", data: prediction.recentForm },
+                                            { title: "🔄 Head-to-Head", data: prediction.headToHead },
+                                            { title: "🚑 Injury Updates", data: prediction.injuryUpdates },
+                                            { title: "🌍 Home/Away Impact", data: prediction.homeAwayImpact },
+                                            { title: "🔥 Tactical Insights", data: prediction.tacticalInsights },
+                                            { title: "💰 Betting Market Movement", data: prediction.bettingMarketMovement },
+                                            { title: "📈 Expert Predictions", data: prediction.expertPredictions },
+                                            { title: "📈 Characterization", data: prediction.characterization },
+                                        ].map((item, index) => (
+                                            <motion.div
+                                                key={index}
+                                                whileHover={{ scale: 1.03 }}
+                                                className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
+                                            >
+                                                <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
+                                                <p className="text-gray-300">{item.data || "No data available"}</p>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+
+                                    {/* 📜 Full AI Response */}
+                                    <motion.div className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md">
+                                        <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
+                                        <pre className="text-sm whitespace-pre-wrap text-gray-300">
+                      {prediction.fullText}
+                    </pre>
+                                    </motion.div>
+                                </motion.div>
+                            ))}
                         </motion.div>
                     )}
+
                 </motion.div>
             </main>
 
