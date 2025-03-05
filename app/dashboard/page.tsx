@@ -153,7 +153,7 @@ export default function DashboardPage() {
                     {finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
                             {finalResult.predictions.map((prediction: GamePrediction, idx: number) => {
-                                // Check if this is the "intro block" that starts with 🔮
+                                // Identify if this block is actually an "intro block"
                                 const isIntroBlock = prediction.gameTitle.startsWith("🔮");
 
                                 return (
@@ -164,15 +164,14 @@ export default function DashboardPage() {
                                         transition={{ duration: 0.5 }}
                                         className="bg-gray-800 p-6 rounded shadow-lg w-full"
                                     >
-                                        <h2 className="text-2xl font-bold text-blue-300 mb-1">{prediction.gameTitle}</h2>
-                                        {prediction.competition && (
-                                            <p className="text-sm text-gray-400 mb-3">Competition: {prediction.competition}</p>
-                                        )}
+                                        <h2 className="text-2xl font-bold text-blue-300 mb-1">
+                                            {prediction.gameTitle}
+                                        </h2>
 
-                                        {/* Only render the "Final Prediction," "Key Stats," and "Full AI Response" if NOT intro block */}
+                                        {/* Only show the standard prediction UI if this is NOT an intro block */}
                                         {!isIntroBlock && (
                                             <>
-                                                {/* 🏆 Final Prediction */}
+                                                {/* ✅ Final Prediction */}
                                                 <motion.div
                                                     whileHover={{ scale: 1.02 }}
                                                     className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
@@ -217,8 +216,8 @@ export default function DashboardPage() {
                                                 >
                                                     <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
                                                     <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                            {prediction.fullText}
-                          </pre>
+                                                        {prediction.fullText}
+                                                    </pre>
                                                 </motion.div>
                                             </>
                                         )}
@@ -226,7 +225,7 @@ export default function DashboardPage() {
                                 );
                             })}
 
-                            {/* Render Citations Once at the Bottom */}
+                            {/* Citations displayed once at the bottom */}
                             {finalResult.predictions[0].citations &&
                                 finalResult.predictions[0].citations.length > 0 && (
                                     <motion.div
