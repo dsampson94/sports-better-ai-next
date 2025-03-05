@@ -1,30 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-import connectToDatabase from '../../../lib/mongoose';
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateAdmin } from '../../../authMiddleware';
 import User from '../../../lib/models/User';
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-
 export async function GET(req: NextRequest) {
-    await connectToDatabase();
+    const authResult = await authenticateAdmin(req);
+    if (authResult instanceof NextResponse) return authResult; // Handle error
 
-    const token = req.cookies.get('sportsbet_token')?.value;
-
-    if (!token) {
-        return NextResponse.json({ error: 'Authentication token missing' }, { status: 401 });
-    }
-
-    try {
-        const decoded: any = jwt.verify(token, JWT_SECRET);
-
-        if (!decoded.isAdmin) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
-
-        const users = await User.find().select('-password');
-
-        return NextResponse.json(users, { status: 200 });
-    } catch (error) {
-        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
-    }
+    const users = await User.find().select("-password"); // Exclude sensitive data
+    return NextResponse.json(users, { status: 200 });
 }
