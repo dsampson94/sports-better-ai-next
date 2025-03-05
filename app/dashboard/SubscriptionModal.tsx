@@ -2,67 +2,105 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import axios from 'axios';
 
 interface SubscriptionModalProps {
     onClose: () => void;
 }
 
+const plans = {
+    basic: { price: 5, aiCalls: 20, duration: 30 },
+    standard: { price: 10, aiCalls: 40, duration: 30 },
+    premium: { price: 25, aiCalls: 100, duration: 30 },
+};
+
 const SubscriptionModal = ({ onClose }: SubscriptionModalProps) => {
-    const merchantId = process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_ID;
-    const merchantKey = process.env.NEXT_PUBLIC_PAYFAST_MERCHANT_KEY;
-    const returnUrl = encodeURIComponent(`${ window.location.origin }/dashboard`);
+    const handleSubscribe = async (plan: keyof typeof plans) => {
+        const { price, aiCalls } = plans[plan];
 
-    const plans = {
-        basic: { price: 5, aiCalls: 20, duration: 1 },
-        pro: { price: 10, aiCalls: 50, duration: 1 },
-        premium: { price: 20, aiCalls: 100, duration: 1 },
-    };
+        try {
+            const response = await axios.post('/api/payfast/pay-now', {
+                amount: price,
+                itemName: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan - ${aiCalls} AI Calls`,
+                orderId: `sub-${plan}-${Date.now()}`,
+            });
 
-    const handlePayFastRedirect = (plan: keyof typeof plans) => {
-        if (!merchantId || !merchantKey) {
-            console.error('PayFast merchant details are missing.');
-            return;
+            const { actionUrl, formData } = response.data;
+
+            const form = document.createElement('form');
+            form.action = actionUrl;
+            form.method = 'POST';
+
+            Object.entries(formData).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value as string;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+        } catch (error) {
+            console.error('Payment initialization error:', error);
+            alert('An error occurred during payment initialization. Please try again.');
         }
-
-        const { price } = plans[plan];
-        window.location.href = `https://www.payfast.co.za/eng/process?merchant_id=${ merchantId }&merchant_key=${ merchantKey }&amount=${ price }&item_name=${ encodeURIComponent(plan) }+Plan&return_url=${ returnUrl }`;
     };
 
     return (
         <motion.div
-            initial={ { opacity: 0 } }
-            animate={ { opacity: 1 } }
-            exit={ { opacity: 0 } }
-            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50 backdrop-blur-sm"
         >
             <motion.div
-                initial={ { opacity: 0, y: -20 } }
-                animate={ { opacity: 1, y: 0 } }
-                exit={ { opacity: 0, y: -20 } }
-                transition={ { duration: 0.3 } }
-                className="bg-gray-800 text-white p-6 rounded-lg shadow-lg max-w-md w-full"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white text-gray-900 dark:bg-gray-900 dark:text-white shadow-xl rounded-xl max-w-lg w-full p-8 relative"
             >
-                <h2 className="text-2xl font-bold mb-3">🚀 Upgrade Your Subscription</h2>
-                <p className="text-gray-300 mb-4">
-                    Get full access to premium AI betting insights.
+                <button
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"
+                    onClick={onClose}
+                >
+                    ✕
+                </button>
+
+                <h2 className="text-3xl font-semibold text-center mb-4">
+                    🚀 Upgrade Your Plan
+                </h2>
+                <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+                    Choose a plan that fits your betting insights needs.
                 </p>
 
-                <div className="space-y-3">
-                    { Object.entries(plans).map(([key, { price, aiCalls }]) => (
-                        <button
-                            key={ key }
-                            onClick={ () => handlePayFastRedirect(key as keyof typeof plans) }
-                            className="w-full py-3 px-4 bg-green-600 hover:bg-green-500 rounded text-white transition"
+                <div className="grid grid-cols-1 gap-4">
+                    {Object.entries(plans).map(([key, { price, aiCalls }]) => (
+                        <div
+                            key={key}
+                            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-between hover:shadow-md transition"
                         >
-                            { `${ key.charAt(0).toUpperCase() + key.slice(1) } - $${ price } for ${ aiCalls } AI Calls` }
-                        </button>
-                    )) }
+                            <div>
+                                <h3 className="text-lg font-medium capitalize">{key} Plan</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    {aiCalls} AI Calls • {plans[key].duration} days
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => handleSubscribe(key as keyof typeof plans)}
+                                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-md hover:from-green-600 hover:to-green-700 transition shadow-sm"
+                            >
+                                ${price}
+                            </button>
+                        </div>
+                    ))}
                 </div>
 
-                <div className="flex justify-end mt-4">
+                <div className="mt-6 text-center">
                     <button
-                        onClick={ onClose }
-                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition"
+                        onClick={onClose}
+                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition"
                     >
                         Maybe Later
                     </button>
