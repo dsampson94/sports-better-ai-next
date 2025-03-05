@@ -135,7 +135,7 @@ export default function DashboardPage() {
             </motion.header>
 
             {/* MAIN CONTENT */}
-            <main className="flex-1 p-4">
+            <main className="flex-1 py-4 px-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -152,7 +152,7 @@ export default function DashboardPage() {
                         </motion.div>
                     )}
 
-                    <form onSubmit={handleAnalyze} className="space-y-4 mb-6">
+                    <form onSubmit={handleAnalyze} className="space-y-4  mb-6">
                         <motion.textarea
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -163,7 +163,7 @@ export default function DashboardPage() {
                             onChange={(e) => setQuery(e.target.value)}
                         />
                         <motion.button
-                            whileHover={{ scale: 1.05 }}
+                            whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.95 }}
                             type="submit"
                             disabled={loading || !isDeltaAlpha}
