@@ -82,14 +82,15 @@ export default function DashboardPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
-                    className="max-w-3xl mx-auto"
+                    // Single column but wide
+                    className="w-full max-w-screen-xl mx-auto"
                 >
                     <h2 className="text-3xl font-semibold mb-4 text-center text-green-400">
                         AI Sports Predictions ⚽🏀🎾
                     </h2>
                     <p className="mb-4 text-gray-400 text-center">
                         Enter your query about upcoming matches. Our AI analyzes multiple models
-                        and provides <strong>the best synthesized prediction.</strong>
+                        and provides <strong>the best synthesized prediction</strong>.
                     </p>
 
                     {errorMsg && (
@@ -102,7 +103,7 @@ export default function DashboardPage() {
                         </motion.div>
                     )}
 
-                    <form onSubmit={handleAnalyze} className="space-y-4">
+                    <form onSubmit={handleAnalyze} className="space-y-4 mb-6">
                         <motion.textarea
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -125,21 +126,26 @@ export default function DashboardPage() {
 
                     {/* RESULT SECTION */}
                     {finalResult && finalResult.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                            className="mt-6 bg-gray-800 p-6 rounded space-y-6 shadow-lg"
-                        >
+                        <div className="space-y-8">
                             {finalResult.map((prediction: GamePrediction, idx: number) => (
-                                <motion.div key={idx} className="mb-8">
-                                    {/* Title from aggregator text (e.g. "Ireland vs France") */}
-                                    <h2 className="text-2xl font-bold text-blue-300 mb-2">Game: {prediction.gameTitle}</h2>
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.5 }}
+                                    className="bg-gray-800 p-6 rounded space-y-6 shadow-lg w-full"
+                                >
+                                    <h2 className="text-2xl font-bold text-blue-300 mb-1">
+                                        Game: {prediction.gameTitle}
+                                    </h2>
+                                    <p className="text-sm text-gray-400 mb-3">
+                                        Competition: {prediction.competition}
+                                    </p>
 
                                     {/* 🏆 Final Prediction & Betting Insights */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
-                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
                                     >
                                         <h3 className="text-xl font-bold mb-2 text-green-400">🏆 Final Prediction</h3>
                                         <p className="text-gray-300">
@@ -151,7 +157,7 @@ export default function DashboardPage() {
                                     </motion.div>
 
                                     {/* 📌 Key Stats & Trends */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {[
                                             { title: "📅 Fixture Details", data: prediction.fixtureDetails },
                                             { title: "📊 Recent Form", data: prediction.recentForm },
@@ -162,9 +168,9 @@ export default function DashboardPage() {
                                             { title: "💰 Betting Market Movement", data: prediction.bettingMarketMovement },
                                             { title: "📈 Expert Predictions", data: prediction.expertPredictions },
                                             { title: "📈 Characterization", data: prediction.characterization },
-                                        ].map((item, index) => (
+                                        ].map((item, i) => (
                                             <motion.div
-                                                key={index}
+                                                key={i}
                                                 whileHover={{ scale: 1.03 }}
                                                 className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
                                             >
@@ -175,7 +181,10 @@ export default function DashboardPage() {
                                     </div>
 
                                     {/* 📜 Full AI Response */}
-                                    <motion.div className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md">
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                    >
                                         <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
                                         <pre className="text-sm whitespace-pre-wrap text-gray-300">
                       {prediction.fullText}
@@ -183,9 +192,8 @@ export default function DashboardPage() {
                                     </motion.div>
                                 </motion.div>
                             ))}
-                        </motion.div>
+                        </div>
                     )}
-
                 </motion.div>
             </main>
 

@@ -2,7 +2,8 @@ import { useState } from "react";
 
 // Each game’s data structure
 export interface GamePrediction {
-    gameTitle: string;                // e.g. "Ireland vs France"
+    gameTitle: string;
+    competition: string;
     winProbability: string;
     bestBet: string;
     fixtureDetails: string;
@@ -14,13 +15,12 @@ export interface GamePrediction {
     bettingMarketMovement: string;
     expertPredictions: string;
     characterization: string;
-    fullText: string; // raw text for that game block
+    fullText: string;
     updatedBalance?: number;
     freePredictionCount?: number;
 }
 
 export function useAnalysis() {
-    // finalResult is now an array of GamePrediction objects
     const [finalResult, setFinalResult] = useState<GamePrediction[] | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>("");
@@ -31,12 +31,8 @@ export function useAnalysis() {
         setError("");
 
         try {
-            console.log("🔍 Step 1: Fetching web search data...");
-            const webSearchRes = await fetch("/api/analysis/web-search", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ userInput }),
-            });
+            // 1) Web search data
+            const webSearchRes = await fetch("/api/analysis/web-search", { /* ... */ });
             const webSearchData = await webSearchRes.json();
             if (webSearchData.error) throw new Error(webSearchData.error);
             const perplexityData = webSearchData.perplexityData;
@@ -60,44 +56,45 @@ export function useAnalysis() {
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
-            // 1) Log aggregatorData for debugging
-            console.log("🔎 aggregatorData:", JSON.stringify(aggregatorData, null, 2));
-
-            // 2) The aggregator route returns finalAnswer
-            //    which is the full text containing multiple game predictions
-            const fullResponse: string = aggregatorData.finalAnswer || "No full response available";
-
+            // aggregatorData.finalAnswer holds the combined text
+            const fullResponse = aggregatorData.finalAnswer || "No full response available";
             console.log("📝 Full Aggregated Text:\n", fullResponse);
 
-            // 3) Split the text into an array of game blocks based on heading "## "
-            //    We expect each game block to start with lines like: "## Ireland vs France"
-            //    The first element might be empty if there's text before the first "##"
-            const rawBlocks = fullResponse.split(/^## /gm).map(block => block.trim()).filter(Boolean);
+            // 4) Split on "## " to get multiple games
+            const rawBlocks = fullResponse.split(/^## /gm).map((b) => b.trim()).filter(Boolean);
 
-            // Helper function to extract bullet data from each block
+            // Helper to extract text between markers
             function extractBetween(block: string, start: string, end: string | null) {
-                // If 'end' is provided, parse until that. Otherwise, parse until the end of the block
-                const pattern = end
-                    ? new RegExp(start + "\\s*(.*?)\\s*(?=" + end + ")", "s")
-                    : new RegExp(start + "\\s*(.*)", "s");
+                let pattern: RegExp;
+                if (end) {
+                    pattern = new RegExp(start + "\\s*(.*?)\\s*(?=" + end + ")", "s");
+                } else {
+                    pattern = new RegExp(start + "\\s*(.*)", "s");
+                }
                 const match = block.match(pattern);
                 return match ? match[1].trim() : "No data available";
             }
 
-            // Parse each block into a structured object
             const predictions: GamePrediction[] = rawBlocks.map((block) => {
-                // The first line in `block` is typically "Ireland vs France" or "England vs Italy" etc.
-                // So let's extract the first line as the gameTitle:
+                // 1) Game title is first line
                 const lines = block.split("\n");
                 const gameTitle = lines[0]?.trim() || "No Title";
 
-                // After that line, we expect the bullet points
-                // We'll do a more general approach:
-                // We'll isolate the text after "🏆 Final Prediction & Betting Insights:"
-                // so the bullet lines are consistent with aggregator's format.
-                const predictionSection = block.split("🏆 Final Prediction & Betting Insights:")[1] || block;
+                // 2) Check for "Competition:" line
+                let competition = "Unknown Competition";
+                for (const line of lines) {
+                    if (line.startsWith("Competition:")) {
+                        competition = line.replace("Competition:", "").trim();
+                        break;
+                    }
+                }
 
-                // Now extract each bullet
+                // 3) Find "🏆 Final Prediction & Betting Insights:" portion
+                const predictionSection = block.includes("🏆 Final Prediction & Betting Insights:")
+                    ? block.split("🏆 Final Prediction & Betting Insights:")[1]
+                    : block;
+
+                // 4) Extract bullet points
                 const winProbability = extractBetween(predictionSection, "- Win Probability:", "- Best Bet:");
                 const bestBet = extractBetween(predictionSection, "- Best Bet:", "- Key Stats & Trends:");
                 const fixtureDetails = extractBetween(predictionSection, "- 📅 Fixture Details:", "- 📊 Recent Form:");
@@ -112,6 +109,7 @@ export function useAnalysis() {
 
                 return {
                     gameTitle,
+                    competition,
                     winProbability,
                     bestBet,
                     fixtureDetails,
@@ -127,25 +125,16 @@ export function useAnalysis() {
                 };
             });
 
-            console.log("🔄 Predictions parsed from aggregator text:", predictions);
-
-            // 4) Update usage (balance/free calls)
-            const updateRes = await fetch("/api/user/update-usage", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-            });
+            // 5) Update usage
+            const updateRes = await fetch("/api/user/update-usage", { method: "POST", headers: { "Content-Type": "application/json" } });
             const updateData = await updateRes.json();
-            if (updateData.error) {
-                console.warn("⚠️ Warning: Failed to update usage:", updateData.error);
-            }
+            if (updateData.error) console.warn("⚠️ Failed to update usage:", updateData.error);
 
-            // Add updatedBalance/freePredictionCount to each game
-            predictions.forEach((pred) => {
-                pred.updatedBalance = updateData.updatedBalance ?? 0;
-                pred.freePredictionCount = updateData.freePredictionCount ?? 0;
+            predictions.forEach((p) => {
+                p.updatedBalance = updateData.updatedBalance ?? 0;
+                p.freePredictionCount = updateData.freePredictionCount ?? 0;
             });
 
-            console.log("✅ Final result set successfully!");
             setFinalResult(predictions);
         } catch (e: any) {
             setError(e.message || "Error analyzing input.");
