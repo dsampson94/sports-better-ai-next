@@ -2,21 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
-
-// Subscription Plans
-export const SUBSCRIPTION_PLANS = {
-    basic: { price: 5, aiCalls: 20 },
-    standard: { price: 10, aiCalls: 40 },
-    premium: { price: 25, aiCalls: 100 },
-};
+import { SUBSCRIPTION_PLANS } from "../../../lib/config";
 
 export async function POST(req: NextRequest) {
     try {
-        // Authenticate user
         const token = req.cookies.get("sportsbet_token")?.value;
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
         let decoded: any;
         try {
             decoded = jwt.verify(token, process.env.JWT_SECRET!);
@@ -43,25 +37,17 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        let updated: boolean;
-
         if (subscriptionType) {
-            // Subscription purchase
             const planDetails = SUBSCRIPTION_PLANS[subscriptionType];
 
             user.subscriptionPlan = subscriptionType;
             user.subscriptionStatus = "active";
-            user.aiCallAllowance += planDetails.aiCalls; // Add AI calls
-            updated = true;
+            user.aiCallAllowance += planDetails.aiCalls;
         } else {
-            // Regular token purchase (balance top-up)
             user.balance = (user.balance || 0) + amountPaid;
-            updated = true;
         }
 
-        if (updated) {
-            await user.save();
-        }
+        await user.save();
 
         return NextResponse.json({
             success: true,

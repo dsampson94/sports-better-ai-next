@@ -21,7 +21,6 @@ export interface GamePrediction {
     fullText: string;
     citations?: string[];
     updatedBalance?: number;
-    freePredictionCount?: number;
     aiCallAllowance?: number;
 }
 
@@ -34,6 +33,8 @@ export function useAnalysis() {
     const [finalResult, setFinalResult] = useState<AnalysisResult | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
+    const [userBalance, setUserBalance] = useState<number>(0);
+    const [aiCallAllowance, setAiCallAllowance] = useState<number>(0);
 
     async function analyze(userInput: string) {
         setLoading(true);
@@ -41,7 +42,7 @@ export function useAnalysis() {
         setError('');
 
         try {
-            // Check if user has enough AI calls or balance before making requests
+            // ✅ Step 1: Deduct AI Call / Balance BEFORE sending request
             const updateRes = await fetch('/api/user/update-usage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -52,13 +53,15 @@ export function useAnalysis() {
                 throw new Error(updateData.error);
             }
 
-            const { updatedBalance, aiCallAllowance } = updateData;
+            // ✅ Step 2: Update UI state before fetching results
+            setUserBalance(updateData.updatedBalance);
+            setAiCallAllowance(updateData.aiCallAllowance);
 
-            if (aiCallAllowance <= 0 && updatedBalance <= 0) {
+            if (updateData.aiCallAllowance <= 0 && updateData.updatedBalance <= 0) {
                 throw new Error('Insufficient AI calls and balance. Please purchase tokens.');
             }
 
-            // Fetch web search data
+            // ✅ Step 3: Fetch web search data
             const webSearchRes = await fetch('/api/analysis/web-search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -68,7 +71,7 @@ export function useAnalysis() {
             if (webSearchData.error) throw new Error(webSearchData.error);
             const perplexityData = webSearchData.perplexityData;
 
-            // Fetch AI response analysis
+            // ✅ Step 4: Fetch AI response analysis
             const responseAnalysisRes = await fetch('/api/analysis/response-analysis', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -78,7 +81,7 @@ export function useAnalysis() {
             if (responseAnalysisData.error) throw new Error(responseAnalysisData.error);
             const partialResponses = responseAnalysisData.partialResponses;
 
-            // Fetch final aggregator
+            // ✅ Step 5: Fetch final aggregator
             const aggregatorRes = await fetch('/api/analysis/analysis-aggregator', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -89,7 +92,7 @@ export function useAnalysis() {
 
             let aggregated = aggregatorData.finalAnswer.finalAnswer || aggregatorData.finalAnswer || '';
 
-            // Split text
+            // ✅ Step 6: Split aggregated text into intro and game blocks
             let introText = '';
             let gameText = aggregated;
             const splitIndex = aggregated.indexOf('🏆 Game Title:');
@@ -164,8 +167,8 @@ export function useAnalysis() {
                     overallRecommendation,
                     fullText: block,
                     citations: aggregatorData.citations || [],
-                    updatedBalance,
-                    freePredictionCount: aiCallAllowance,
+                    updatedBalance: userBalance,
+                    aiCallAllowance: aiCallAllowance,
                 };
             });
 
@@ -178,5 +181,5 @@ export function useAnalysis() {
         }
     }
 
-    return { finalResult, loading, error, analyze };
+    return { finalResult, loading, error, analyze, userBalance, aiCallAllowance };
 }

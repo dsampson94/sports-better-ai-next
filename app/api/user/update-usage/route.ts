@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import User from "../../../lib/models/User";
-import { SUBSCRIPTION_PLANS } from '../../payfast/notify/route';
+import { SUBSCRIPTION_PLANS } from "../../../lib/config";
 
 export async function POST(req: NextRequest) {
     try {

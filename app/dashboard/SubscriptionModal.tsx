@@ -9,9 +9,9 @@ interface SubscriptionModalProps {
 }
 
 const plans = {
-    basic: { price: 5, aiCalls: 20, duration: 30 },
-    standard: { price: 10, aiCalls: 40, duration: 30 },
-    premium: { price: 25, aiCalls: 100, duration: 30 },
+    basic: { price: 5, aiCalls: 20 },
+    standard: { price: 10, aiCalls: 40 },
+    premium: { price: 25, aiCalls: 100 },
 };
 
 const SubscriptionModal = ({ onClose }: SubscriptionModalProps) => {
@@ -74,7 +74,7 @@ const SubscriptionModal = ({ onClose }: SubscriptionModalProps) => {
                 </p>
 
                 <div className="grid grid-cols-1 gap-4">
-                    {Object.entries(plans).map(([key, { price, aiCalls, duration }]) => (
+                    {Object.entries(plans).map(([key, { price, aiCalls }]) => (
                         <button
                             key={key}
                             onClick={() => handleSubscribe(key as keyof typeof plans)}
@@ -83,7 +83,7 @@ const SubscriptionModal = ({ onClose }: SubscriptionModalProps) => {
                             <div>
                                 <h3 className="text-lg font-semibold capitalize text-white">{key} Plan</h3>
                                 <p className="text-sm text-gray-400">
-                                    {aiCalls} AI Calls • {duration} days
+                                    {aiCalls} AI Calls
                                 </p>
                             </div>
                             <span className="text-lg font-semibold text-white">${price}</span>
