@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 // Each game’s data structure
 export interface GamePrediction {
@@ -24,18 +24,18 @@ export interface GamePrediction {
 export function useAnalysis() {
     const [finalResult, setFinalResult] = useState<GamePrediction[] | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string>("");
+    const [error, setError] = useState<string>('');
 
     async function analyze(userInput: string) {
         setLoading(true);
         setFinalResult(null);
-        setError("");
+        setError('');
 
         try {
             // Fetch web search data
-            const webSearchRes = await fetch("/api/analysis/web-search", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const webSearchRes = await fetch('/api/analysis/web-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userInput }),
             });
             const webSearchData = await webSearchRes.json();
@@ -43,9 +43,9 @@ export function useAnalysis() {
             const perplexityData = webSearchData.perplexityData;
 
             // Fetch AI response analysis
-            const responseAnalysisRes = await fetch("/api/analysis/response-analysis", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const responseAnalysisRes = await fetch('/api/analysis/response-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userInput, perplexityData }),
             });
             const responseAnalysisData = await responseAnalysisRes.json();
@@ -53,70 +53,77 @@ export function useAnalysis() {
             const partialResponses = responseAnalysisData.partialResponses;
 
             // Fetch final aggregator
-            const aggregatorRes = await fetch("/api/analysis/analysis-aggregator", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const aggregatorRes = await fetch('/api/analysis/analysis-aggregator', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userInput, perplexityData, partialResponses }),
             });
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
             // Use finalAnswer for the full aggregated text
-            const aggregated = aggregatorData.finalAnswer || "";
-            console.log("📝 Full Aggregated Text:\n", aggregated);
+            let aggregated = aggregatorData.finalAnswer || '';
+            // Ensure aggregated is a string
+
+            console.log('📝 Full Aggregated Text:\n', aggregated);
 
             // Also capture citations from aggregator
             const aggregatorCitations = aggregatorData.citations || [];
-            console.log("🔗 Citations:", aggregatorCitations);
+            console.log('🔗 Citations:', aggregatorCitations);
 
             // Split aggregated text into game blocks.
             // We assume that each game block starts with a pattern like "🏆 Game Title:" (for game 1, 2, etc.)
-            const gameBlocks = aggregated?.split(/(?=🏆 Game Title:)/g).map((b: string) => b.trim()).filter(Boolean);
-            console.log("🔎 Game Blocks Found:", gameBlocks.length);
-            gameBlocks.forEach((block, index) => console.log(`Game Block ${index + 1}:\n${block}\n---------------------`));
+            const gameBlocks = aggregated
+                .split(/(?=🏆 Game Title:)/g)
+                .map((b: string) => b.trim())
+                .filter(Boolean);
+            console.log('🔎 Game Blocks Found:', gameBlocks.length);
+            gameBlocks.forEach((block, index) =>
+                console.log(`Game Block ${ index + 1 }:\n${ block }\n---------------------`)
+            );
 
             // Helper to extract text between markers (no fallback text)
             function extractBetween(text: string, start: string, end: string | null): string {
                 let pattern: RegExp;
                 if (end) {
-                    pattern = new RegExp(`${start}\\s*(.*?)\\s*(?=${end})`, "s");
+                    pattern = new RegExp(`${start}\\s*(.*?)\\s*(?=${end})`, 's');
                 } else {
-                    pattern = new RegExp(`${start}\\s*(.*)`, "s");
+                    pattern = new RegExp(`${start}\\s*(.*)`, 's');
                 }
                 const match = text.match(pattern);
-                return match ? match[1].trim() : "";
+                return match ? match[1].trim() : '';
             }
 
             const predictions: GamePrediction[] = gameBlocks.map((block) => {
-                const lines = block.split("\n");
+                const lines = block.split('\n');
                 // Assume first line is like "**1. Italy vs Wales**"
-                const firstLine = lines[0]?.trim() || "";
-                const gameTitle = firstLine.replace(/^\*\*\d+\.\s/, "").replace(/\*\*$/, "").trim();
+                const firstLine = lines[0]?.trim() || '';
+                const gameTitle = firstLine.replace(/^\*\*\d+\.\s/, '').replace(/\*\*$/, '').trim();
 
                 // Check for a "Competition:" line
-                let competition = "";
+                let competition = '';
                 for (const line of lines) {
-                    if (line.startsWith("Competition:")) {
-                        competition = line.replace("Competition:", "").trim();
+                    if (line.startsWith('Competition:')) {
+                        competition = line.replace('Competition:', '').trim();
                         break;
                     }
                 }
 
                 // Get bullet section: use text starting from "🏆 Final Prediction & Betting Insights:"
-                const predictionIndex = block.indexOf("🏆 Final Prediction & Betting Insights:");
+                const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
                 const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
 
-                const winProbability = extractBetween(bulletSection, "- Win Probability:", "- Best Bet:");
-                const bestBet = extractBetween(bulletSection, "- Best Bet:", "- Key Stats & Trends:");
-                const fixtureDetails = extractBetween(bulletSection, "- 📅 Fixture Details:", "- 📊 Recent Form:");
-                const recentForm = extractBetween(bulletSection, "- 📊 Recent Form:", "- 🔄 Head-to-Head");
-                const headToHead = extractBetween(bulletSection, "- 🔄 Head-to-Head", "- 🚑 Injury Updates:");
-                const injuryUpdates = extractBetween(bulletSection, "- 🚑 Injury Updates:", "- 🌍 Home/Away Impact:");
-                const homeAwayImpact = extractBetween(bulletSection, "- 🌍 Home/Away Impact:", "- 🔥 Tactical Insights:");
-                const tacticalInsights = extractBetween(bulletSection, "- 🔥 Tactical Insights:", "- 💰 Betting Market Movement:");
-                const bettingMarketMovement = extractBetween(bulletSection, "- 💰 Betting Market Movement:", "- 📈 Expert Predictions");
-                const expertPredictions = extractBetween(bulletSection, "- 📈 Expert Predictions", "- 📈 Characterization:");
-                const characterization = extractBetween(bulletSection, "- 📈 Characterization:", null);
+                const winProbability = extractBetween(bulletSection, '- Win Probability:', '- Best Bet:');
+                const bestBet = extractBetween(bulletSection, '- Best Bet:', '- Key Stats & Trends:');
+                const fixtureDetails = extractBetween(bulletSection, '- 📅 Fixture Details:', '- 📊 Recent Form:');
+                const recentForm = extractBetween(bulletSection, '- 📊 Recent Form:', '- 🔄 Head-to-Head');
+                const headToHead = extractBetween(bulletSection, '- 🔄 Head-to-Head', '- 🚑 Injury Updates:');
+                const injuryUpdates = extractBetween(bulletSection, '- 🚑 Injury Updates:', '- 🌍 Home/Away Impact:');
+                const homeAwayImpact = extractBetween(bulletSection, '- 🌍 Home/Away Impact:', '- 🔥 Tactical Insights:');
+                const tacticalInsights = extractBetween(bulletSection, '- 🔥 Tactical Insights:', '- 💰 Betting Market Movement:');
+                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 📈 Expert Predictions');
+                const expertPredictions = extractBetween(bulletSection, '- 📈 Expert Predictions', '- 📈 Characterization:');
+                const characterization = extractBetween(bulletSection, '- 📈 Characterization:', null);
 
                 return {
                     gameTitle,
@@ -137,16 +144,16 @@ export function useAnalysis() {
                 };
             });
 
-            console.log("🔄 Parsed Predictions:", predictions);
+            console.log('🔄 Parsed Predictions:', predictions);
 
             // Update usage data
-            const updateRes = await fetch("/api/user/update-usage", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const updateRes = await fetch('/api/user/update-usage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
             });
             const updateData = await updateRes.json();
             if (updateData.error) {
-                console.warn("⚠️ Usage update error:", updateData.error);
+                console.warn('⚠️ Usage update error:', updateData.error);
             }
             predictions.forEach((p) => {
                 p.updatedBalance = updateData.updatedBalance ?? 0;
@@ -155,8 +162,8 @@ export function useAnalysis() {
 
             setFinalResult(predictions);
         } catch (e: any) {
-            setError(e.message || "Error analyzing input.");
-            console.error("❌ Analysis Error:", e.message);
+            setError(e.message || 'Error analyzing input.');
+            console.error('❌ Analysis Error:', e.message);
         } finally {
             setLoading(false);
         }
