@@ -31,7 +31,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const token = localStorage.getItem('authToken');
+                const token = localStorage.getItem('sportsbet_token');
 
                 const [usersRes, transactionsRes] = await Promise.all([
                     fetch('/api/admin/users', {
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
                     </tr>
                     </thead>
                     <tbody>
-                    { users.map((user) => (
+                    { users?.map((user) => (
                         <tr key={ user._id } className="text-center">
                             <td className="border border-gray-600 px-4 py-2">{ user.email }</td>
                             <td className="border border-gray-600 px-4 py-2">{ user.username || 'N/A' }</td>
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
                     </tr>
                     </thead>
                     <tbody>
-                    { transactions.map((transaction) => (
+                    { transactions?.map((transaction) => (
                         <tr key={ transaction._id } className="text-center">
                             <td className="border border-gray-600 px-4 py-2">{ transaction.user }</td>
                             <td className="border border-gray-600 px-4 py-2">${ transaction.amount.toFixed(2) }</td>
