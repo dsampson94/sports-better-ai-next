@@ -16,7 +16,7 @@ export interface GamePrediction {
     expertPredictions: string;
     characterization: string;
     fullText: string;
-    citations?: string[];        // same array for all games in final result
+    citations?: string[];
     updatedBalance?: number;
     freePredictionCount?: number;
 }
@@ -32,7 +32,7 @@ export function useAnalysis() {
         setError('');
 
         try {
-            // 1) Web Search
+            // Fetch web search data
             const webSearchRes = await fetch('/api/analysis/web-search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -42,7 +42,7 @@ export function useAnalysis() {
             if (webSearchData.error) throw new Error(webSearchData.error);
             const perplexityData = webSearchData.perplexityData;
 
-            // 2) AI Response Analysis
+            // Fetch AI response analysis
             const responseAnalysisRes = await fetch('/api/analysis/response-analysis', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -52,7 +52,7 @@ export function useAnalysis() {
             if (responseAnalysisData.error) throw new Error(responseAnalysisData.error);
             const partialResponses = responseAnalysisData.partialResponses;
 
-            // 3) Final Aggregator
+            // Fetch final aggregator
             const aggregatorRes = await fetch('/api/analysis/analysis-aggregator', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -61,7 +61,7 @@ export function useAnalysis() {
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
-            // Safely extract final answer text
+            // Safely extract the final answer text
             let aggregated = '';
             if (
                 aggregatorData &&
@@ -76,22 +76,22 @@ export function useAnalysis() {
 
             console.log('📝 Full Aggregated Text:\n', aggregated);
 
-            // Citations from aggregator
+            // Also capture citations from aggregator (shared among all games)
             const aggregatorCitations = aggregatorData.citations || [];
             console.log('🔗 Citations:', aggregatorCitations);
 
-            // Split aggregated text into game blocks (looking for "🏆 Game Title:")
+            // Split aggregated text into game blocks.
+            // We assume each game block starts with "🏆 Game Title:"
             const gameBlocks = aggregated
                 .split(/(?=🏆 Game Title:)/g)
                 .map((b: string) => b.trim())
                 .filter(Boolean);
-
             console.log('🔎 Game Blocks Found:', gameBlocks.length);
             gameBlocks.forEach((block, index) => {
                 console.log(`Game Block ${index + 1}:\n${block}\n---------------------`);
             });
 
-            // Helper function to extract text
+            // Helper to extract text between markers (no fallback text)
             function extractBetween(text: string, start: string, end: string | null): string {
                 let pattern: RegExp;
                 if (end) {
@@ -103,13 +103,13 @@ export function useAnalysis() {
                 return match ? match[1].trim() : '';
             }
 
-            // Build final predictions array
             const predictions: GamePrediction[] = gameBlocks.map((block) => {
                 const lines = block.split('\n');
-                // e.g. first line: "**1. Italy vs Wales**"
+                // Assume first line is like "**1. Italy vs Wales**"
                 const firstLine = lines[0]?.trim() || '';
                 const gameTitle = firstLine.replace(/^\*\*\d+\.\s/, '').replace(/\*\*$/, '').trim();
 
+                // Extract Competition if available from any line starting with "Competition:"
                 let competition = '';
                 for (const line of lines) {
                     if (line.startsWith('Competition:')) {
@@ -118,6 +118,7 @@ export function useAnalysis() {
                     }
                 }
 
+                // Start from "🏆 Final Prediction & Betting Insights:"
                 const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
                 const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
 
@@ -154,7 +155,7 @@ export function useAnalysis() {
 
             console.log('🔄 Parsed Predictions:', predictions);
 
-            // 4) Update usage
+            // Update usage data
             const updateRes = await fetch('/api/user/update-usage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
