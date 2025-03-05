@@ -11,7 +11,7 @@ export interface IUser extends Document {
     subscriptionStatus?: string;
     subscriptionPlan?: string;
     usageCountThisMonth?: number;
-    freePredictionCount?: number;  // New field to track free predictions
+    freePredictionCount?: number;
 }
 
 const UserSchema: Schema<IUser> = new Schema({
