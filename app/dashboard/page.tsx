@@ -97,6 +97,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gray-900 text-white flex flex-col">
             {/* HEADER */}
             <header className="bg-gray-800 p-4 flex justify-between items-center relative">
+                <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
                 <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
                 <nav className="flex items-center space-x-4">
                     {profileLoading ? (
