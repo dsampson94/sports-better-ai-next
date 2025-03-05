@@ -64,7 +64,7 @@ export default function DashboardPage() {
                 className="bg-gray-800 p-4 flex justify-between items-center"
             >
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-12" />
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-10" />
                     <h1 className="text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
                 {!profileLoading && userProfile && (
@@ -74,6 +74,9 @@ export default function DashboardPage() {
                         <p className="text-gray-300">Free Calls Used: {userProfile.freePredictionCount ?? 0} / 3</p>
                     </div>
                 )}
+                <a href="/api/auth/logout" className="text-red-400 hover:text-red-500 transition">
+                    Logout
+                </a>
             </motion.header>
 
             {/* MAIN CONTENT */}
@@ -88,8 +91,7 @@ export default function DashboardPage() {
                         AI Sports Predictions ⚽🏀🎾
                     </h2>
                     <p className="mb-4 text-gray-400 text-center">
-                        Enter your query about upcoming matches. Our AI analyzes multiple models
-                        and provides <strong>the best synthesized prediction</strong>.
+                        Enter your query about upcoming matches. Our AI analyzes multiple models and provides <strong>the best synthesized prediction</strong>.
                     </p>
 
                     {errorMsg && (
@@ -123,7 +125,6 @@ export default function DashboardPage() {
                         </motion.button>
                     </form>
 
-                    {/* RESULT SECTION */}
                     {finalResult && finalResult.length > 0 && (
                         <div className="space-y-8">
                             {finalResult.map((prediction: GamePrediction, idx: number) => (
@@ -141,7 +142,7 @@ export default function DashboardPage() {
                                         Competition: {prediction.competition}
                                     </p>
 
-                                    {/* 🏆 Final Prediction & Betting Insights */}
+                                    {/* 🏆 Final Prediction */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
@@ -174,10 +175,25 @@ export default function DashboardPage() {
                                                 className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
                                             >
                                                 <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
-                                                <p className="text-gray-300">{item.data || "No data available"}</p>
+                                                <p className="text-gray-300">{item.data || ""}</p>
                                             </motion.div>
                                         ))}
                                     </div>
+
+                                    {/* 🔗 Citations */}
+                                    {prediction.citations && prediction.citations.length > 0 && (
+                                        <motion.div
+                                            whileHover={{ scale: 1.02 }}
+                                            className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                        >
+                                            <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations</h3>
+                                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                                {prediction.citations.map((cite, cIdx) => (
+                                                    <li key={cIdx}>{cite}</li>
+                                                ))}
+                                            </ul>
+                                        </motion.div>
+                                    )}
 
                                     {/* 📜 Full AI Response */}
                                     <motion.div
