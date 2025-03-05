@@ -115,7 +115,7 @@ export default function DashboardPage() {
                                         {userProfile.username || userProfile.email}
                                     </p>
                                     <p className="text-gray-300 text-xs">
-                                        Credits: {userProfile.balance ?? 0}
+                                        Credits: {(userProfile.balance ?? 0).toFixed(2)}
                                     </p>
                                     <p className="text-gray-300 text-xs">
                                         Free Calls Used: {userProfile.freePredictionCount ?? 0} / 3
