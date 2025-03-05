@@ -39,12 +39,13 @@ export default function DashboardPage() {
                 const res = await fetch('/api/user/me');
                 if (!res.ok) throw new Error('Unauthorized');
                 const data = await res.json();
+
                 setUserProfile({
                     email: data.email || '',
                     username: data.username || '',
                     balance: data.balance ?? 0,
-                    freePredictionCount: data.freePredictionCount ?? 0,
-                    aiCallAllowance: data.aiCallAllowance ?? 0,
+                    freePredictionCount: data.freePredictionCount,
+                    aiCallAllowance: data.aiCallAllowance,
                 });
             } catch (err) {
                 console.error('Unauthorized access:', err);
@@ -59,44 +60,66 @@ export default function DashboardPage() {
 
     // Check if user is the special user "deltaalphavids"
     const isDeltaAlpha = userProfile.username === 'deltaalphavids';
+    const isButtonDisabled = userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5;
 
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
         setErrorMsg('');
 
-        if (!isDeltaAlpha) {
-            setErrorMsg('Under Construction, come back soon!');
-            return;
-        }
-
-        const freeCalls = userProfile.freePredictionCount; // ✅ Now used
-        const balance = userProfile.balance;
-        const aiCalls = userProfile.aiCallAllowance;
+        const { freePredictionCount, aiCallAllowance, balance } = userProfile;
         const costPerCall = 0.5;
 
-        // ✅ Use free calls first, then deduct AI calls, then balance
-        if (freeCalls > 0) {
-            setUserProfile(prev => ({
-                ...prev,
-                freePredictionCount: prev.freePredictionCount - 1, // ✅ Deduct free call first
-            }));
-        } else if (aiCalls > 0) {
-            setUserProfile(prev => ({
-                ...prev,
-                aiCallAllowance: Math.max(0, prev.aiCallAllowance - 1), // ✅ Deduct AI call
-            }));
-        } else if (balance >= costPerCall) {
-            setUserProfile(prev => ({
-                ...prev,
-                balance: Math.max(0, prev.balance - costPerCall), // ✅ Deduct from balance
-            }));
-        } else {
-            setErrorMsg('You have used all your AI calls and do not have enough balance. Please add credits.');
+        let updateData: Partial<UserProfile> = {};
+
+        // ✅ Use free calls first
+        if (freePredictionCount > 0) {
+            updateData = {
+                freePredictionCount: freePredictionCount - 1,
+                aiCallAllowance: aiCallAllowance - 1, // ✅ Ensure AI calls also decrement
+            };
+        }
+        // ✅ Then use AI call allowance
+        else if (aiCallAllowance > 0) {
+            updateData = { aiCallAllowance: aiCallAllowance - 1 };
+        }
+        // ✅ Then use balance
+        else if (balance >= costPerCall) {
+            updateData = { balance: balance - costPerCall };
+        }
+        // ❌ If all exhausted, show error
+        else {
+            setErrorMsg('You have used all AI calls and do not have enough balance. Please add credits.');
             return;
         }
 
+        // ✅ Update user data in DB to persist changes
+        await updateUserCalls(updateData);
+
+        // ✅ Proceed with analysis
         await analyze(query);
     }
+
+// ✅ Function to Update the Database
+    async function updateUserCalls(updatedFields: Partial<UserProfile>) {
+        try {
+            const res = await fetch('/api/user/update-calls', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: userProfile.email,
+                    ...updatedFields,
+                }),
+            });
+
+            if (!res.ok) throw new Error('Failed to update user');
+
+            const updatedUser = await res.json();
+            setUserProfile(prev => ({ ...prev, ...updatedUser }));
+        } catch (error) {
+            console.error('Error updating user:', error);
+        }
+    }
+
 
     // "Get Best Bets" button handler
     async function handleBestBets(e: FormEvent) {
@@ -248,20 +271,14 @@ export default function DashboardPage() {
                         {/* Button Container (horizontal row) */ }
                         <div className="flex flex-row space-x-2">
                             <motion.button
-                                whileHover={ { scale: 1.02 } }
-                                whileTap={ { scale: 0.95 } }
                                 type="submit"
-                                disabled={ userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5 }
+                                disabled={ isButtonDisabled }
                                 className={ `
         px-4 py-2 rounded-lg font-semibold text-sm transition 
-        ${ userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5
-                                    ? 'bg-gray-500 cursor-not-allowed text-gray-300'
-                                    : 'bg-green-600 hover:bg-green-500 text-white' }
+        ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
     ` }
                             >
-                                { userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5
-                                    ? 'Get More Tokens'
-                                    : (loading ? 'Analyzing...' : 'Get Predictions') }
+                                { isButtonDisabled ? 'Get More Tokens' : (loading ? 'Analyzing...' : 'Get Predictions') }
                             </motion.button>
 
                             <motion.button
