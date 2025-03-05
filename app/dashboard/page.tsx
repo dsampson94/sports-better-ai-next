@@ -74,6 +74,9 @@ export default function DashboardPage() {
                         <p className="text-gray-300">Free Calls Used: {userProfile.freePredictionCount ?? 0} / 3</p>
                     </div>
                 )}
+                <a href="/api/auth/logout" className="text-red-400 hover:text-red-500 transition">
+                    Logout
+                </a>
             </motion.header>
 
             {/* MAIN CONTENT */}
@@ -82,15 +85,13 @@ export default function DashboardPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
-                    // Single column but wide
                     className="w-full max-w-screen-xl mx-auto"
                 >
                     <h2 className="text-3xl font-semibold mb-4 text-center text-green-400">
                         AI Sports Predictions ⚽🏀🎾
                     </h2>
                     <p className="mb-4 text-gray-400 text-center">
-                        Enter your query about upcoming matches. Our AI analyzes multiple models
-                        and provides <strong>the best synthesized prediction</strong>.
+                        Enter your query about upcoming matches. Our AI analyzes multiple models and provides <strong>the best synthesized prediction</strong>.
                     </p>
 
                     {errorMsg && (
@@ -124,7 +125,6 @@ export default function DashboardPage() {
                         </motion.button>
                     </form>
 
-                    {/* RESULT SECTION */}
                     {finalResult && finalResult.length > 0 && (
                         <div className="space-y-8">
                             {finalResult.map((prediction: GamePrediction, idx: number) => (
