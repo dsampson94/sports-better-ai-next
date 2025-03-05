@@ -1,7 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
-    const response = NextResponse.redirect("/");
-    response.cookies.set("sportsbet_token", "", { maxAge: 0 });
-    return response;
+export async function POST(req: NextRequest) {
+    try {
+        const response = NextResponse.json({ message: "Logged out successfully" });
+        response.cookies.set("sportsbet_token", "", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            expires: new Date(0), // Expire the cookie immediately
+            path: "/",
+        });
+
+        return response;
+    } catch (error) {
+        console.error("Logout error:", error);
+        return NextResponse.json({ error: "Failed to logout" }, { status: 500 });
+    }
 }

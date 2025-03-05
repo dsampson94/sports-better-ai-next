@@ -4,6 +4,7 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { logout } from '../lib/auth';
 
 interface UserProfile {
     email: string;
@@ -91,11 +92,6 @@ export default function DashboardPage() {
     // Toggle user dropdown
     const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-    // Logout
-    const handleLogout = () => {
-        router.push('/api/auth/logout');
-    };
-
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col font-sans">
             {/* HEADER */ }
@@ -172,7 +168,7 @@ export default function DashboardPage() {
                                     </button>
                                 }
                                 <button
-                                    onClick={ handleLogout }
+                                    onClick={logout}
                                     className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
                                 >
                                     Logout
