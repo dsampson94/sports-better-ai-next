@@ -291,11 +291,11 @@ const PredictionBlock = ({ prediction }: { prediction: GamePrediction }) => {
                                         data: prediction.bettingMarketMovement,
                                     },
                                     {
-                                        title: '📈 Expert Predictions & Trends',
+                                        title: '💡 Expert Predictions & Trends',
                                         data: prediction.expertPredictions,
                                     },
                                     {
-                                        title: '📈 Characterization',
+                                        title: '📝 Characterization',
                                         data: prediction.characterization,
                                     },
                                     {
