@@ -20,21 +20,27 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Email is required" }, { status: 400 });
         }
 
-        // 1. Ensure user in DB
+        // Check if user exists
         let user = await User.findOne({ email });
+
+        // If user doesn't exist, create and assign the admin role if it's deltaalphavids
         if (!user) {
-            user = await User.create({ email });
+            const isAdmin = email.toLowerCase() === "deltaalphavids@gmail.com";
+            user = await User.create({
+                email,
+                role: isAdmin ? "ADMIN" : "USER",
+            });
         }
 
-        // 2. Create a magic link token (expires in 15 min)
-        const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET!, {
+        // Create a magic link token (expires in 15 min)
+        const token = jwt.sign({ email: user.email, role: user.role }, process.env.JWT_SECRET!, {
             expiresIn: "15m",
         });
 
-        // 3. Construct the magic link
+        // Construct the magic link
         const magicLink = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${token}`;
 
-        // 4. Send email via SES
+        // Send email via SES
         const params = {
             Source: process.env.EMAIL_FROM!,
             Destination: { ToAddresses: [user.email] },
@@ -61,9 +67,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: "Magic link sent to your email!" });
     } catch (error) {
         console.error("Send Magic Link Error:", error);
-        return NextResponse.json(
-            { error: "Failed to send magic link" },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Failed to send magic link" }, { status: 500 });
     }
 }

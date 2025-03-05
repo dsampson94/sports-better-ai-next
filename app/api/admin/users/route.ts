@@ -5,13 +5,11 @@ import User from "../../../lib/models/User";
 
 export async function GET(req: NextRequest) {
     try {
-        // Extract token from cookies
         const token = req.cookies.get("sportsbet_token")?.value;
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Verify token and decode user
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
         await connectToDatabase();
         const requestingUser = await User.findOne({ email: decoded.email });
@@ -20,7 +18,6 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        // Fetch all users
         const users = await User.find({});
         return NextResponse.json({ users });
     } catch (error: any) {

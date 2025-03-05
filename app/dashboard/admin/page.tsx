@@ -31,7 +31,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const token = localStorage.getItem('authToken'); // Ensure token is retrieved correctly
+                const token = localStorage.getItem('authToken');
 
                 const [usersRes, transactionsRes] = await Promise.all([
                     fetch('/api/admin/users', {

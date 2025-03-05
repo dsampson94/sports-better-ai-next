@@ -2,17 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import connectToDatabase from "../../../lib/mongoose";
 import Transaction from "../../../lib/models/Transaction";
-import User from '../../../lib/models/User'; // Ensure this model exists
+import User from "../../../lib/models/User";
 
 export async function GET(req: NextRequest) {
     try {
-        // Extract token from cookies
         const token = req.cookies.get("sportsbet_token")?.value;
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Verify token and decode user
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
         await connectToDatabase();
         const requestingUser = await User.findOne({ email: decoded.email });
@@ -21,7 +19,6 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        // Fetch all transactions
         const transactions = await Transaction.find({});
         return NextResponse.json({ transactions });
     } catch (error: any) {
