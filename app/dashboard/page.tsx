@@ -38,9 +38,18 @@ export default function DashboardPage() {
         fetchUserProfile();
     }, [router]);
 
+    // Check if user is the special user "deltaalphavids"
+    const isDeltaAlpha = userProfile?.username === "deltaalphavids";
+
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
         setErrorMsg("");
+
+        // If not the special user, do nothing
+        if (!isDeltaAlpha) {
+            setErrorMsg("Under Construction, come back soon!");
+            return;
+        }
 
         const freeCalls = userProfile?.freePredictionCount ?? 0;
         const balance = userProfile?.balance ?? 0;
@@ -118,13 +127,16 @@ export default function DashboardPage() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || !isDeltaAlpha}
                             className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-semibold w-full"
                         >
-                            {loading ? "Analyzing..." : "Get AI Prediction"}
+                            {isDeltaAlpha
+                                ? (loading ? "Analyzing..." : "Get AI Prediction")
+                                : "Under Construction, come back soon!"}
                         </motion.button>
                     </form>
 
+                    {/* If we have finalResult, show each game prediction */}
                     {finalResult && finalResult.length > 0 && (
                         <div className="space-y-8">
                             {finalResult.map((prediction: GamePrediction, idx: number) => (
@@ -180,33 +192,33 @@ export default function DashboardPage() {
                                         ))}
                                     </div>
 
-                                    {/* 🔗 Citations */}
-                                    {prediction.citations && prediction.citations.length > 0 && (
-                                        <motion.div
-                                            whileHover={{ scale: 1.02 }}
-                                            className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
-                                        >
-                                            <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations</h3>
-                                            <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                                                {prediction.citations.map((cite, cIdx) => (
-                                                    <li key={cIdx}>{cite}</li>
-                                                ))}
-                                            </ul>
-                                        </motion.div>
-                                    )}
-
-                                    {/* 📜 Full AI Response */}
+                                    {/* 📜 Full AI Response (Optional) */}
                                     <motion.div
                                         whileHover={{ scale: 1.02 }}
                                         className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
                                     >
                                         <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
                                         <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                      {prediction.fullText}
-                    </pre>
+                                            {prediction.fullText}
+                                        </pre>
                                     </motion.div>
                                 </motion.div>
                             ))}
+
+                            {/* 🔗 Citations SHOWN ONLY ONCE at the BOTTOM */}
+                            {finalResult[0].citations && finalResult[0].citations.length > 0 && (
+                                <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                >
+                                    <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations (All Games)</h3>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                        {finalResult[0].citations.map((cite, cIdx) => (
+                                            <li key={cIdx}>{cite}</li>
+                                        ))}
+                                    </ul>
+                                </motion.div>
+                            )}
                         </div>
                     )}
                 </motion.div>
