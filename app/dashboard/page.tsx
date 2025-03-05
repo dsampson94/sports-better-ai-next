@@ -81,7 +81,7 @@ export default function DashboardPage() {
             >
                 {/* Left: Logo and Title */}
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-16" />
+                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-18" />
                 </div>
                 {/* Right: Query Input, Button & User Dropdown */}
                 <div className="flex items-center space-x-4 relative">
@@ -100,7 +100,7 @@ export default function DashboardPage() {
                             disabled={loading || !isDeltaAlpha}
                             className="bg-green-600 hover:bg-green-500 px-3 py-2 rounded text-white font-semibold text-sm"
                         >
-                            {isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get AI Prediction') : 'N/A'}
+                            {isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Prediction') : 'Come back soon!'}
                         </motion.button>
                     </form>
                     {/* User Info Dropdown */}
@@ -153,11 +153,8 @@ export default function DashboardPage() {
                     transition={{ duration: 0.5, delay: 0.3 }}
                     className="w-full max-w-screen-xl mx-auto"
                 >
-                    <h2 className="text-3xl font-semibold mb-4 text-center text-green-400">
-                        AI Sports Predictions ⚽🏀🎾
-                    </h2>
                     <p className="mb-4 text-gray-400 text-center">
-                        Our AI analyzes multiple models and provides <strong>the best synthesized prediction</strong>.
+                        Our advanced AI system leverages multiple cutting-edge models and real-time sports data to deliver a highly refined, synthesized prediction. By cross-referencing diverse analytical insights and live market trends, we provide you with the most accurate and actionable betting recommendation available.
                     </p>
 
                     {errorMsg && (
