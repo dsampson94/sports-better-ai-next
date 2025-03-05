@@ -195,50 +195,54 @@ export default function DashboardPage() {
                         </motion.div>
                     ) }
 
-                    {/* Form stacked vertically */}
+                    {/* Form stacked vertically */ }
                     <form
-                        onSubmit={handleAnalyze}
+                        onSubmit={ handleAnalyze }
                         className="flex flex-col space-y-3 w-full mb-6"
                     >
                         <motion.textarea
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
+                            initial={ { opacity: 0, y: 10 } }
+                            animate={ { opacity: 1, y: 0 } }
+                            transition={ { duration: 0.3 } }
                             className="p-4 rounded-lg bg-gray-800 border border-gray-600
                          focus:outline-none focus:ring-2 focus:ring-green-500
                          focus:border-transparent text-sm transition-colors
                          ease-in-out duration-150 w-full"
-                            rows={4}
+                            rows={ 1 }
                             placeholder='e.g. "Who will likely win the next big rugby match?"'
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            value={ query }
+                            onChange={ (e) => setQuery(e.target.value) }
                         />
 
-                        {/* Button: Get Predictions (full width) */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.95 }}
-                            type="submit"
-                            disabled={loading || !isDeltaAlpha}
-                            className="bg-green-600 hover:bg-green-500 px-4 py-2
-                         rounded-lg text-white font-semibold text-sm w-full
-                         transition-colors ease-in-out duration-150"
-                        >
-                            {isDeltaAlpha ? (loading ? "Analyzing..." : "Get Predictions") : "Come back soon!"}
-                        </motion.button>
+                        {/* Button Container (horizontal row) */ }
+                        <div className="flex flex-row space-x-2">
+                            <motion.button
+                                whileHover={ { scale: 1.02 } }
+                                whileTap={ { scale: 0.95 } }
+                                type="submit"
+                                disabled={ loading || !isDeltaAlpha }
+                                className="bg-green-600 hover:bg-green-500 px-4 py-2
+               rounded-lg text-white font-semibold text-sm
+               transition-colors ease-in-out duration-150
+               w-auto"
+                            >
+                                { isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Predictions') : 'Come back soon!' }
+                            </motion.button>
 
-                        {/* Button: Get Best Bets (full width, stacked below) */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleBestBets}
-                            disabled={loading || !isDeltaAlpha}
-                            className="bg-blue-600 hover:bg-blue-500 px-4 py-2
-                         rounded-lg text-white font-semibold text-sm w-full
-                         transition-colors ease-in-out duration-150"
-                        >
-                            Get Best Bets
-                        </motion.button>
+                            <motion.button
+                                whileHover={ { scale: 1.02 } }
+                                whileTap={ { scale: 0.95 } }
+                                onClick={ handleBestBets }
+                                disabled={ loading || !isDeltaAlpha }
+                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2
+               rounded-lg text-white font-semibold text-sm
+               transition-colors ease-in-out duration-150
+               w-auto"
+                            >
+                                Get Best Bets
+                            </motion.button>
+                        </div>
+
                     </form>
 
                     {/* Render Aggregated Intro if available */ }
