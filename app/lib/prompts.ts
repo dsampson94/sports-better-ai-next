@@ -69,6 +69,7 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
 - ENSURE THE BELOW FORMAT IS ALWAYS USED FOR EVERY GAME PREDICTION EVER DONE IN THE SYSTEM AS THE FRONTEND LOOKS FOR CERTAIN TEXT AND IT MUST ALWAYS BE THE SAME.
 - We assume that each game block starts with the pattern "🏆 Game Title:" (for game 1, 2, etc.) - This is compulsory and represents a game block.
 - Start each response with the "🔮" emoji - This is how we know that the first block is not a game prediction and must have its own UI.
+- EACH 'Key Stats & Trends:' BULLET POINT MUST HAVE AT LEAST 2 SENTENCES. Insightful and informative.
 
 🏆 Game Title: [Team A] vs [Team B] | [Competition Name]
 ✅ Final Prediction & Betting Insights:
@@ -82,8 +83,9 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
     - 🌍 Home/Away Impact: Performance at Venue & likliness of significant impact
     - 🔥 Tactical Insights: Expected play styles, approaches to the game & deep strategic & tactical analysis
     - 💰 Betting Market Movement: Full analysis on the betting markets position on the game and each team.
-    - 📈 Expert Predictions & Trends: Insights from Analysts
-    - 📈 Characterization: A broad characterization of each team and the match.
+    - 💡 Expert Predictions & Trends: Insights from Analysts.
+    - 📝 Characterization: A broad characterization of each team and the match.
+    - 🎯 Overall Recommendation: A data-driven suggestion determining if you should place a bet and what the optimal bets are for the match.
 `,
 
     AGGREGATOR_USER: (combinedText: string, sportsData: string) => `
@@ -103,6 +105,7 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
         - Characterise each team and describe the current character of the team in the Characterization bullet point.. 
         - We assume that each game block starts with the pattern "🏆 Game Title:" (for game 1, 2, etc.) - This is compulsory and represents a game block.
         - Start each response with the "🔮" emoji - This is how we know that the first block is not a game prediction and must have its own UI.
+        - EACH 'Key Stats & Trends:' BULLET POINT MUST HAVE AT LEAST 2 SENTENCES. Insightful and informative.
 
         🏆 Game Title: [Team A] vs [Team B] | [Competition Name]
         ✅ Final Prediction & Betting Insights:
@@ -116,8 +119,9 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
             - 🌍 Home/Away Impact: Performance at Venue & likliness of significant impact
             - 🔥 Tactical Insights: Expected play styles, approaches to the game & deep strategic & tactical analysis
             - 💰 Betting Market Movement: Full analysis on the betting markets position on the game and each team.
-            - 📈 Expert Predictions & Trends: Insights from Analysts
-            - 📈 Characterization: A broad characterization of each team and the match.
+            - 💡 Expert Predictions & Trends: Insights from Analysts.
+            - 📝 Characterization: A broad characterization of each team and the match.
+            - 🎯 Overall Recommendation: A data-driven suggestion determining if you should place a bet and what the optimal bets are for the match.
     `,
 
 };

@@ -17,6 +17,7 @@ export interface GamePrediction {
     bettingMarketMovement: string;
     expertPredictions: string;
     characterization: string;
+    overallRecommendation: string;
     fullText: string;
     citations?: string[];
     updatedBalance?: number;
@@ -123,10 +124,10 @@ export function useAnalysis() {
                 return match ? match[1].trim() : '';
             }
 
-            // Update the markers to match our actual output (e.g., include "Record:" and "& Squad")
+            // Update the markers to match our actual output in the aggregated text.
             const predictions: GamePrediction[] = gameBlocks.map((block) => {
                 const lines = block.split('\n');
-                // Assume first line is like "**1. Italy vs Wales**" or "🏆 Game Title: India vs Australia"
+                // Assume first line is like "🏆 Game Title: India vs Australia"
                 const firstLine = lines[0]?.trim() || '';
                 const gameTitle = firstLine.replace(/^🏆 Game Title:\s*/, '').trim();
 
@@ -151,9 +152,10 @@ export function useAnalysis() {
                 const injuryUpdates = extractBetween(bulletSection, '- 🚑 Injury & Squad Updates:', '- 🌍 Home/Away Impact:');
                 const homeAwayImpact = extractBetween(bulletSection, '- 🌍 Home/Away Impact:', '- 🔥 Tactical Insights:');
                 const tacticalInsights = extractBetween(bulletSection, '- 🔥 Tactical Insights:', '- 💰 Betting Market Movement:');
-                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 📈 Expert Predictions & Trends');
+                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 📈 Expert Predictions & Trends:');
                 const expertPredictions = extractBetween(bulletSection, '- 📈 Expert Predictions & Trends:', '- 📈 Characterization:');
-                const characterization = extractBetween(bulletSection, '- 📈 Characterization:', null);
+                const characterization = extractBetween(bulletSection, '- 📈 Characterization:', '- 🎯 Overall Recommendation:');
+                const overallRecommendation = extractBetween(bulletSection, '- 🎯 Overall Recommendation:', null);
 
                 return {
                     gameTitle,
@@ -169,6 +171,7 @@ export function useAnalysis() {
                     bettingMarketMovement,
                     expertPredictions,
                     characterization,
+                    overallRecommendation,
                     fullText: block,
                     citations: aggregatorCitations,
                 };
