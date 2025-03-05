@@ -70,7 +70,7 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
 - We assume that each game block starts with the pattern "🏆 Game Title:" (for game 1, 2, etc.) - This is compulsory and represents a game block.
 - Start each response with the "🔮" emoji - This is how we know that the first block is not a game prediction and must have its own UI.
 
-🏆 Game Title: [Team A] vs [Team B]
+🏆 Game Title: [Team A] vs [Team B] | [Competition Name]
 ✅ Final Prediction & Betting Insights:
 - Win Probability (%): [Team A] X% | [Team B] Y%
 - Best Bet: [Recommended Bet]
@@ -104,7 +104,7 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
         - We assume that each game block starts with the pattern "🏆 Game Title:" (for game 1, 2, etc.) - This is compulsory and represents a game block.
         - Start each response with the "🔮" emoji - This is how we know that the first block is not a game prediction and must have its own UI.
 
-        🏆 Game Title: [Team A] vs [Team B]
+        🏆 Game Title: [Team A] vs [Team B] | [Competition Name]
         ✅ Final Prediction & Betting Insights:
         - Win Probability (%): [Team A] X% | [Team B] Y%
         - Best Bet: [Recommended Bet]

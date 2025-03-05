@@ -53,7 +53,7 @@ export default function DashboardPage() {
 
         const freeCalls = userProfile?.freePredictionCount ?? 0;
         const balance = userProfile?.balance ?? 0;
-        const costPerCall = 0.50;
+        const costPerCall = 0.5;
 
         if (freeCalls >= 3 && balance < costPerCall) {
             setErrorMsg("You have used your free predictions and do not have enough balance. Please add credits.");
@@ -152,67 +152,79 @@ export default function DashboardPage() {
                     {/* Render Game Prediction Blocks */}
                     {finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
-                            {finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
-                                <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="bg-gray-800 p-6 rounded shadow-lg w-full"
-                                >
-                                    <h2 className="text-2xl font-bold text-blue-300 mb-1">{prediction.gameTitle}</h2>
-                                    {prediction.competition && (
-                                        <p className="text-sm text-gray-400 mb-3">Competition: {prediction.competition}</p>
-                                    )}
+                            {finalResult.predictions.map((prediction: GamePrediction, idx: number) => {
+                                // Check if this is the "intro block" that starts with 🔮
+                                const isIntroBlock = prediction.gameTitle.startsWith("🔮");
 
-                                    {/* 🏆 Final Prediction Block */}
+                                return (
                                     <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                        key={idx}
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.5 }}
+                                        className="bg-gray-800 p-6 rounded shadow-lg w-full"
                                     >
-                                        <h3 className="text-xl font-bold mb-2 text-green-400">🏆 Final Prediction</h3>
-                                        <p className="text-gray-300">
-                                            <strong>Win Probability:</strong> {prediction.winProbability}
-                                        </p>
-                                        <p className="text-gray-300">
-                                            <strong>Best Bet:</strong> {prediction.bestBet}
-                                        </p>
-                                    </motion.div>
+                                        <h2 className="text-2xl font-bold text-blue-300 mb-1">{prediction.gameTitle}</h2>
+                                        {prediction.competition && (
+                                            <p className="text-sm text-gray-400 mb-3">Competition: {prediction.competition}</p>
+                                        )}
 
-                                    {/* 📌 Key Stats & Trends */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                                        {[
-                                            { title: "📅 Fixture Details", data: prediction.fixtureDetails },
-                                            { title: "📊 Recent Form", data: prediction.recentForm },
-                                            { title: "🔄 Head-to-Head", data: prediction.headToHead },
-                                            { title: "🚑 Injury Updates", data: prediction.injuryUpdates },
-                                            { title: "🌍 Home/Away Impact", data: prediction.homeAwayImpact },
-                                            { title: "🔥 Tactical Insights", data: prediction.tacticalInsights },
-                                            { title: "💰 Betting Market Movement", data: prediction.bettingMarketMovement },
-                                            { title: "📈 Expert Predictions", data: prediction.expertPredictions },
-                                            { title: "📈 Characterization", data: prediction.characterization },
-                                        ].map((item, i) => (
-                                            <motion.div
-                                                key={i}
-                                                whileHover={{ scale: 1.03 }}
-                                                className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
-                                            >
-                                                <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
-                                                <p className="text-gray-300">{item.data || ""}</p>
-                                            </motion.div>
-                                        ))}
-                                    </div>
+                                        {/* Only render the "Final Prediction," "Key Stats," and "Full AI Response" if NOT intro block */}
+                                        {!isIntroBlock && (
+                                            <>
+                                                {/* 🏆 Final Prediction */}
+                                                <motion.div
+                                                    whileHover={{ scale: 1.02 }}
+                                                    className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
+                                                >
+                                                    <h3 className="text-xl font-bold mb-2 text-green-400">✅ Final Prediction</h3>
+                                                    <p className="text-gray-300">
+                                                        <strong>Win Probability:</strong> {prediction.winProbability}
+                                                    </p>
+                                                    <p className="text-gray-300">
+                                                        <strong>Best Bet:</strong> {prediction.bestBet}
+                                                    </p>
+                                                </motion.div>
 
-                                    {/* 📜 Full AI Response */}
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
-                                    >
-                                        <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
-                                        <pre className="text-sm whitespace-pre-wrap text-gray-300">{prediction.fullText}</pre>
+                                                {/* Key Stats & Trends */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {[
+                                                        { title: "📅 Fixture Details", data: prediction.fixtureDetails },
+                                                        { title: "📊 Recent Form", data: prediction.recentForm },
+                                                        { title: "🔄 Head-to-Head", data: prediction.headToHead },
+                                                        { title: "🚑 Injury Updates", data: prediction.injuryUpdates },
+                                                        { title: "🌍 Home/Away Impact", data: prediction.homeAwayImpact },
+                                                        { title: "🔥 Tactical Insights", data: prediction.tacticalInsights },
+                                                        { title: "💰 Betting Market Movement", data: prediction.bettingMarketMovement },
+                                                        { title: "📈 Expert Predictions", data: prediction.expertPredictions },
+                                                        { title: "📈 Characterization", data: prediction.characterization },
+                                                    ].map((item, i) => (
+                                                        <motion.div
+                                                            key={i}
+                                                            whileHover={{ scale: 1.03 }}
+                                                            className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
+                                                        >
+                                                            <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
+                                                            <p className="text-gray-300">{item.data || ""}</p>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Full AI Response */}
+                                                <motion.div
+                                                    whileHover={{ scale: 1.02 }}
+                                                    className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
+                                                >
+                                                    <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
+                                                    <pre className="text-sm whitespace-pre-wrap text-gray-300">
+                            {prediction.fullText}
+                          </pre>
+                                                </motion.div>
+                                            </>
+                                        )}
                                     </motion.div>
-                                </motion.div>
-                            ))}
+                                );
+                            })}
 
                             {/* Render Citations Once at the Bottom */}
                             {finalResult.predictions[0].citations &&
