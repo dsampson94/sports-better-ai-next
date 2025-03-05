@@ -1,30 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import connectToDatabase from '../../../lib/mongoose';
-import Transaction from '../../../lib/models/Transaction';
+import connectToDatabase from "../../../lib/mongoose";
+import Transaction from "../../../lib/models/Transaction";
+import User from '../../../lib/models/User'; // Ensure this model exists
 
 export async function GET(req: NextRequest) {
     try {
-        // Authenticate Admin User
+        // Extract token from cookies
         const token = req.cookies.get("sportsbet_token")?.value;
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        // Verify token and decode user
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-        if (!decoded || decoded.role !== "ADMIN") {
+        await connectToDatabase();
+        const requestingUser = await User.findOne({ email: decoded.email });
+
+        if (!requestingUser || requestingUser.role !== "ADMIN") {
             return NextResponse.json({ error: "Access denied" }, { status: 403 });
         }
 
-        // Connect to MongoDB
-        await connectToDatabase();
-
         // Fetch all transactions
-        const transactions = await Transaction.find().sort({ createdAt: -1 });
-
+        const transactions = await Transaction.find({});
         return NextResponse.json({ transactions });
-    } catch (error) {
-        console.error("Error fetching transactions:", error);
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    } catch (error: any) {
+        console.error("GET /api/admin/transactions error:", error);
+        return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }
 }
