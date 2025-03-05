@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 
@@ -109,29 +109,26 @@ export function useAnalysis() {
 
             console.log('🔎 Game Blocks Found:', gameBlocks.length);
             gameBlocks.forEach((block, index) => {
-                console.log(`Game Block ${index + 1}:\n${block}\n---------------------`);
+                console.log(`Game Block ${ index + 1 }:\n${ block }\n---------------------`);
             });
 
-            // Helper to extract text between markers (no fallback text)
             function extractBetween(text: string, start: string, end: string | null): string {
+                const colonOpt = '\\s*:?';
                 let pattern: RegExp;
                 if (end) {
-                    pattern = new RegExp(`${start}\\s*(.*?)\\s*(?=${end})`, 's');
+                    pattern = new RegExp(`${start}${colonOpt}\\s*(.*?)\\s*(?=${end})`, 's');
                 } else {
-                    pattern = new RegExp(`${start}\\s*(.*)`, 's');
+                    pattern = new RegExp(`${start}${colonOpt}\\s*(.*)`, 's');
                 }
                 const match = text.match(pattern);
                 return match ? match[1].trim() : '';
             }
 
-            // Update the markers to match our actual output in the aggregated text.
             const predictions: GamePrediction[] = gameBlocks.map((block) => {
                 const lines = block.split('\n');
-                // Assume first line is like "🏆 Game Title: India vs Australia"
                 const firstLine = lines[0]?.trim() || '';
                 const gameTitle = firstLine.replace(/^🏆 Game Title:\s*/, '').trim();
 
-                // Check for a "Competition:" line
                 let competition = '';
                 for (const line of lines) {
                     if (line.startsWith('Competition:')) {
@@ -140,7 +137,6 @@ export function useAnalysis() {
                     }
                 }
 
-                // Start from "🏆 Final Prediction & Betting Insights:" for the bullet section
                 const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
                 const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
 
