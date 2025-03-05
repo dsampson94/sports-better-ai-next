@@ -61,9 +61,23 @@ export function useAnalysis() {
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
-            // Use finalAnswer for the full aggregated text
-            let aggregated = aggregatorData.finalAnswer || '';
-            // Ensure aggregated is a string
+            // Safely extract the final answer text
+            let aggregated = '';
+
+            if (
+                aggregatorData &&
+                typeof aggregatorData.finalAnswer === 'object' &&
+                typeof aggregatorData.finalAnswer.finalAnswer === 'string'
+            ) {
+                // If aggregatorData.finalAnswer is an object with a .finalAnswer string
+                aggregated = aggregatorData.finalAnswer.finalAnswer;
+            } else if (typeof aggregatorData.finalAnswer === 'string') {
+                // If aggregatorData.finalAnswer is already a string
+                aggregated = aggregatorData.finalAnswer;
+            }
+
+            // Fallback to an empty string if neither condition is true
+            aggregated = aggregated || '';
 
             console.log('📝 Full Aggregated Text:\n', aggregated);
 
@@ -72,15 +86,16 @@ export function useAnalysis() {
             console.log('🔗 Citations:', aggregatorCitations);
 
             // Split aggregated text into game blocks.
-            // We assume that each game block starts with a pattern like "🏆 Game Title:" (for game 1, 2, etc.)
+            // We assume that each game block starts with "🏆 Game Title:"
             const gameBlocks = aggregated
                 .split(/(?=🏆 Game Title:)/g)
                 .map((b: string) => b.trim())
                 .filter(Boolean);
+
             console.log('🔎 Game Blocks Found:', gameBlocks.length);
-            gameBlocks.forEach((block, index) =>
-                console.log(`Game Block ${ index + 1 }:\n${ block }\n---------------------`)
-            );
+            gameBlocks.forEach((block, index) => {
+                console.log(`Game Block ${index + 1}:\n${block}\n---------------------`);
+            });
 
             // Helper to extract text between markers (no fallback text)
             function extractBetween(text: string, start: string, end: string | null): string {
@@ -109,7 +124,7 @@ export function useAnalysis() {
                     }
                 }
 
-                // Get bullet section: use text starting from "🏆 Final Prediction & Betting Insights:"
+                // Start from "🏆 Final Prediction & Betting Insights:"
                 const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
                 const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
 
