@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 
 // Each game’s data structure
@@ -121,11 +123,11 @@ export function useAnalysis() {
                 return match ? match[1].trim() : '';
             }
 
+            // Update the markers to match our actual output (e.g., include "Record:" and "& Squad")
             const predictions: GamePrediction[] = gameBlocks.map((block) => {
                 const lines = block.split('\n');
                 // Assume first line is like "**1. Italy vs Wales**" or "🏆 Game Title: India vs Australia"
                 const firstLine = lines[0]?.trim() || '';
-                // Remove the "🏆 Game Title:" prefix if present
                 const gameTitle = firstLine.replace(/^🏆 Game Title:\s*/, '').trim();
 
                 // Check for a "Competition:" line
@@ -141,15 +143,15 @@ export function useAnalysis() {
                 const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
                 const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
 
-                const winProbability = extractBetween(bulletSection, '- Win Probability:', '- Best Bet:');
+                const winProbability = extractBetween(bulletSection, '- Win Probability', '- Best Bet:');
                 const bestBet = extractBetween(bulletSection, '- Best Bet:', '- Key Stats & Trends:');
                 const fixtureDetails = extractBetween(bulletSection, '- 📅 Fixture Details:', '- 📊 Recent Form:');
                 const recentForm = extractBetween(bulletSection, '- 📊 Recent Form:', '- 🔄 Head-to-Head');
-                const headToHead = extractBetween(bulletSection, '- 🔄 Head-to-Head', '- 🚑 Injury Updates:');
-                const injuryUpdates = extractBetween(bulletSection, '- 🚑 Injury Updates:', '- 🌍 Home/Away Impact:');
+                const headToHead = extractBetween(bulletSection, '- 🔄 Head-to-Head Record:', '- 🚑 Injury & Squad Updates:');
+                const injuryUpdates = extractBetween(bulletSection, '- 🚑 Injury & Squad Updates:', '- 🌍 Home/Away Impact:');
                 const homeAwayImpact = extractBetween(bulletSection, '- 🌍 Home/Away Impact:', '- 🔥 Tactical Insights:');
                 const tacticalInsights = extractBetween(bulletSection, '- 🔥 Tactical Insights:', '- 💰 Betting Market Movement:');
-                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 📈 Expert Predictions');
+                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 📈 Expert Predictions & Trends');
                 const expertPredictions = extractBetween(bulletSection, '- 📈 Expert Predictions & Trends', '- 📈 Characterization:');
                 const characterization = extractBetween(bulletSection, '- 📈 Characterization:', null);
 
