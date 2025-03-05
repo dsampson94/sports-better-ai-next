@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { FormEvent, useEffect, useState } from 'react';
-import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import React, { FormEvent, useEffect, useState } from "react";
+import { GamePrediction, useAnalysis } from "../lib/hooks/useAnalysis";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface UserProfile {
     email: string;
@@ -14,12 +14,12 @@ interface UserProfile {
 
 export default function DashboardPage() {
     const router = useRouter();
-    const [query, setQuery] = useState('');
-    const [errorMsg, setErrorMsg] = useState('');
-    // Initialize with default values so that the account info appears immediately without flashing
+    const [query, setQuery] = useState("");
+    const [errorMsg, setErrorMsg] = useState("");
+    // Initialize user profile with default so it doesn't flash
     const [userProfile, setUserProfile] = useState<UserProfile>({
-        email: '',
-        username: '',
+        email: "",
+        username: "",
         balance: 0,
         freePredictionCount: 0,
     });
@@ -31,36 +31,34 @@ export default function DashboardPage() {
     useEffect(() => {
         async function fetchUserProfile() {
             try {
-                const res = await fetch('/api/user/me');
-                if (!res.ok) throw new Error('Unauthorized');
+                const res = await fetch("/api/user/me");
+                if (!res.ok) throw new Error("Unauthorized");
                 const data = await res.json();
                 setUserProfile({
-                    email: data.email || '',
-                    username: data.username || '',
+                    email: data.email || "",
+                    username: data.username || "",
                     balance: data.balance ?? 0,
                     freePredictionCount: data.freePredictionCount ?? 0,
                 });
             } catch (err) {
-                console.error('Unauthorized access:', err);
-                router.push('/login');
+                console.error("Unauthorized access:", err);
+                router.push("/login");
             } finally {
                 setProfileLoading(false);
             }
         }
-
         fetchUserProfile();
     }, [router]);
 
     // Check if user is the special user "deltaalphavids"
-    const isDeltaAlpha = userProfile.username === 'deltaalphavids';
+    const isDeltaAlpha = userProfile.username === "deltaalphavids";
 
-    // Standard "Analyze" handler
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
-        setErrorMsg('');
+        setErrorMsg("");
 
         if (!isDeltaAlpha) {
-            setErrorMsg('Under Construction, come back soon!');
+            setErrorMsg("Under Construction, come back soon!");
             return;
         }
 
@@ -69,23 +67,24 @@ export default function DashboardPage() {
         const costPerCall = 0.5;
 
         if (freeCalls >= 3 && balance < costPerCall) {
-            setErrorMsg('You have used your free predictions and do not have enough balance. Please add credits.');
+            setErrorMsg(
+                "You have used your free predictions and do not have enough balance. Please add credits."
+            );
             return;
         }
         await analyze(query);
     }
 
-    // "Get Best Bets" handler
+    // "Get Best Bets" button handler
     async function handleBestBets(e: FormEvent) {
         e.preventDefault();
-        setErrorMsg('');
+        setErrorMsg("");
 
         if (!isDeltaAlpha) {
-            setErrorMsg('Under Construction, come back soon!');
+            setErrorMsg("Under Construction, come back soon!");
             return;
         }
-        // Prompt the AI specifically for best bets
-        await analyze('Get best bets');
+        await analyze("Get best bets");
     }
 
     // Toggle user dropdown
@@ -93,7 +92,7 @@ export default function DashboardPage() {
 
     // Logout
     const handleLogout = () => {
-        router.push('/api/auth/logout');
+        router.push("/api/auth/logout");
     };
 
     return (
@@ -105,18 +104,21 @@ export default function DashboardPage() {
                 transition={{ duration: 0.5 }}
                 className="bg-gray-800 p-2 flex justify-between items-center"
             >
-                {/* Left: Logo and Title (only on larger screens) */}
+                {/* Left: Logo and Title (hidden on mobile) */}
                 <div className="flex items-center space-x-3">
-                    <img src="/logos/logo-brain.png" alt="SportsBetter AI Logo" className="h-[110px]" />
+                    <img
+                        src="/logos/logo-brain.png"
+                        alt="SportsBetter AI Logo"
+                        className="h-16 w-auto sm:h-[110px]"
+                    />
                     <h1 className="hidden lg:block text-xl font-bold">SportsBetter AI 🏆</h1>
                 </div>
-
                 {/* Right: User Icon Dropdown */}
                 <div className="relative">
                     <button
                         onClick={toggleDropdown}
                         className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700
-                                   hover:bg-gray-600 focus:outline-none transition"
+                       hover:bg-gray-600 focus:outline-none transition"
                     >
                         {/* Simple user icon (replace with an avatar if you prefer) */}
                         <svg
@@ -125,7 +127,6 @@ export default function DashboardPage() {
                             stroke="currentColor"
                             strokeWidth={2}
                             viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
                         >
                             <path
                                 strokeLinecap="round"
@@ -140,7 +141,7 @@ export default function DashboardPage() {
                             initial={{ opacity: 0, y: -8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -8 }}
-                            className="absolute right-0 mt-2 w-52 bg-gray-800 border border-gray-700 rounded shadow-lg z-10"
+                            className="absolute right-0 mt-2 w-44 bg-gray-800 border border-gray-700 rounded shadow-lg z-10"
                         >
                             <div className="px-4 py-3">
                                 <p className="text-sm text-gray-400 font-semibold">
@@ -157,7 +158,7 @@ export default function DashboardPage() {
                                 <button
                                     onClick={() => {
                                         setDropdownOpen(false);
-                                        router.push('/add-credit');
+                                        router.push("/add-credit");
                                     }}
                                     className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
                                 >
@@ -176,7 +177,7 @@ export default function DashboardPage() {
             </motion.header>
 
             {/* MAIN CONTENT */}
-            <main className="flex-1 py-4 px-4">
+            <main className="flex-1 py-4 px-4 sm:px-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -193,55 +194,50 @@ export default function DashboardPage() {
                         </motion.div>
                     )}
 
-                    {/* Input Form */}
+                    {/* Single-row form: no wrapping */}
                     <form
                         onSubmit={handleAnalyze}
-                        className="flex flex-col md:flex-row md:items-start md:space-x-4 space-y-4 md:space-y-0 mb-6"
+                        className="flex flex-nowrap items-center space-x-2 w-full mb-6"
                     >
-                        {/* Text Area Container */}
-                        <div className="flex-1">
-                            <motion.textarea
-                                id="query"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="w-full p-4 rounded-lg bg-gray-800 border border-gray-600
-                                           focus:outline-none focus:ring-2 focus:ring-green-500
-                                           focus:border-transparent text-sm transition-colors
-                                           ease-in-out duration-150"
-                                rows={2}
-                                placeholder="e.g. 'Who will likely win the next big rugby match?'"
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
-                            />
-                        </div>
+                        <motion.textarea
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex-grow min-w-0 p-4 rounded-lg bg-gray-800 border border-gray-600
+                         focus:outline-none focus:ring-2 focus:ring-green-500
+                         focus:border-transparent text-sm transition-colors
+                         ease-in-out duration-150"
+                            rows={2}
+                            placeholder='e.g. "Who will likely win the next big rugby match?"'
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
 
-                        {/* Buttons Container */}
-                        <div className="flex md:flex-col space-x-2 md:space-x-0 md:space-y-2 md:mt-0 mt-2">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.95 }}
-                                type="submit"
-                                disabled={loading || !isDeltaAlpha}
-                                className="bg-green-600 hover:bg-green-500 px-4 py-2
-                                           rounded-lg text-white font-semibold text-sm
-                                           transition-colors ease-in-out duration-150"
-                            >
-                                {isDeltaAlpha ? (loading ? 'Analyzing...' : 'Get Predictions') : 'Come back soon!'}
-                            </motion.button>
+                        {/* Button 1: Get Predictions */}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.95 }}
+                            type="submit"
+                            disabled={loading || !isDeltaAlpha}
+                            className="flex-shrink-0 bg-green-600 hover:bg-green-500 px-4 py-2
+                         rounded-lg text-white font-semibold text-sm
+                         transition-colors ease-in-out duration-150"
+                        >
+                            {isDeltaAlpha ? (loading ? "Analyzing..." : "Get Predictions") : "Come back soon!"}
+                        </motion.button>
 
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={handleBestBets}
-                                disabled={loading || !isDeltaAlpha}
-                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2
-                                           rounded-lg text-white font-semibold text-sm
-                                           transition-colors ease-in-out duration-150"
-                            >
-                                Get Best Bets
-                            </motion.button>
-                        </div>
+                        {/* Button 2: Get Best Bets */}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleBestBets}
+                            disabled={loading || !isDeltaAlpha}
+                            className="flex-shrink-0 bg-blue-600 hover:bg-blue-500 px-4 py-2
+                         rounded-lg text-white font-semibold text-sm
+                         transition-colors ease-in-out duration-150"
+                        >
+                            Get Best Bets
+                        </motion.button>
                     </form>
 
                     {/* Render Aggregated Intro if available */}
@@ -284,7 +280,9 @@ export default function DashboardPage() {
                         </div>
                     )}
 
-                    {error && <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>}
+                    {error && (
+                        <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>
+                    )}
                 </motion.div>
             </main>
 
@@ -303,7 +301,7 @@ interface PredictionBlockProps {
 
 const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
     const [collapsed, setCollapsed] = useState(false);
-    const isIntroBlock = prediction.gameTitle.startsWith('🔮');
+    const isIntroBlock = prediction.gameTitle.startsWith("🔮");
 
     return (
         <motion.div
@@ -324,7 +322,7 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                         className="mb-4 bg-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-600 transition"
                         onClick={() => setCollapsed(!collapsed)}
                     >
-                        {collapsed ? 'Show Details' : 'Hide Details'}
+                        {collapsed ? "Show Details" : "Hide Details"}
                     </button>
                     {!collapsed && (
                         <>
@@ -344,24 +342,35 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                             {/* Key Stats & Trends */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {[
-                                    { title: '📅 Fixture Details', data: prediction.fixtureDetails },
-                                    { title: '📊 Recent Form', data: prediction.recentForm },
-                                    { title: '🔄 Head-to-Head', data: prediction.headToHead },
-                                    { title: '🚑 Injury Updates', data: prediction.injuryUpdates },
-                                    { title: '🌍 Home/Away Impact', data: prediction.homeAwayImpact },
-                                    { title: '🔥 Tactical Insights', data: prediction.tacticalInsights },
-                                    { title: '💰 Betting Market Movement', data: prediction.bettingMarketMovement },
-                                    { title: '💡 Expert Predictions & Trends', data: prediction.expertPredictions },
-                                    { title: '📝 Characterization', data: prediction.characterization },
-                                    { title: '🎯 Overall Recommendation', data: prediction.overallRecommendation },
+                                    { title: "📅 Fixture Details", data: prediction.fixtureDetails },
+                                    { title: "📊 Recent Form", data: prediction.recentForm },
+                                    { title: "🔄 Head-to-Head", data: prediction.headToHead },
+                                    { title: "🚑 Injury Updates", data: prediction.injuryUpdates },
+                                    { title: "🌍 Home/Away Impact", data: prediction.homeAwayImpact },
+                                    { title: "🔥 Tactical Insights", data: prediction.tacticalInsights },
+                                    {
+                                        title: "💰 Betting Market Movement",
+                                        data: prediction.bettingMarketMovement,
+                                    },
+                                    {
+                                        title: "💡 Expert Predictions & Trends",
+                                        data: prediction.expertPredictions,
+                                    },
+                                    { title: "📝 Characterization", data: prediction.characterization },
+                                    {
+                                        title: "🎯 Overall Recommendation",
+                                        data: prediction.overallRecommendation,
+                                    },
                                 ].map((item, i) => (
                                     <motion.div
                                         key={i}
                                         whileHover={{ scale: 1.03 }}
                                         className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
                                     >
-                                        <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
-                                        <p className="text-gray-300">{item.data || ''}</p>
+                                        <h4 className="text-md font-semibold text-yellow-400">
+                                            {item.title}
+                                        </h4>
+                                        <p className="text-gray-300">{item.data || ""}</p>
                                     </motion.div>
                                 ))}
                             </div>
@@ -370,10 +379,12 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                                 whileHover={{ scale: 1.02 }}
                                 className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
                             >
-                                <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
+                                <h3 className="text-lg font-bold mb-2 text-blue-400">
+                                    📜 Full AI Response
+                                </h3>
                                 <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                                    {prediction.fullText}
-                                </pre>
+                  {prediction.fullText}
+                </pre>
                             </motion.div>
                         </>
                     )}
