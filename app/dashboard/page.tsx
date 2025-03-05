@@ -196,7 +196,7 @@ export default function DashboardPage() {
                                                         { title: "🌍 Home/Away Impact", data: prediction.homeAwayImpact },
                                                         { title: "🔥 Tactical Insights", data: prediction.tacticalInsights },
                                                         { title: "💰 Betting Market Movement", data: prediction.bettingMarketMovement },
-                                                        { title: "📈 Expert Predictions", data: prediction.expertPredictions },
+                                                        { title: "📈 Expert Predictions & Trends", data: prediction.expertPredictions },
                                                         { title: "📈 Characterization", data: prediction.characterization },
                                                     ].map((item, i) => (
                                                         <motion.div
