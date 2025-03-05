@@ -42,7 +42,7 @@ ${ perplexityResponses[1] || 'No data available' }
 - Format your response with structure, bullet points, and sports emojis.
 - **Final Prediction:** Offer a strong best bet recommendation based on expert insights.
 
-⚠️ **Important:**  
+⚠️ **STRICT RULES:** 
 - **DO NOT fabricate stats or teams**—use only the provided data and do web searches to validate information.
 - **DO NOT hold back—predict like a champ and use multiple data sources online, like [SuperSport](https://supersport.com/).** 
 - FACT CHECK EVERYTHING. ENSURE THE DATA IS ACCURATE. DO WEB SEARCHES TO ENSURE ACCURACY.
@@ -64,7 +64,8 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
 🚀 STRICT RULES:
 - Make it visually engaging but professional.
 - MAKE IT FUN AND INTERESTING BUT STILL PRECISE.
-- Follow the exact format below for each game. EACH GAME MUST HAVE ANALYSIS IN THE FORMAT MENTIONED BELOW.
+- **DO NOT say "I cannot predict"**—always provide the most likely outcome based on given insights.
+- Follow the exact format below for each game. EACH GAME MUST HAVE ANALYSIS IN THE FORMAT MENTIONED BELOW. This is EXTREMELY IMPORTANT AND MUST BE DONE FOR EACH AND EVERY PREDICTION.
 
 🏆 Final Prediction & Betting Insights:
 - Win Probability (%): [Team A] X% | [Team B] Y%
@@ -91,7 +92,24 @@ Your job is to analyze, merge, and enhance AI-generated insights and real-world 
         ⚠️ Presentation Rules:  
         - Make it fun and interesting to read for a sports lover.  
         - Use bullet points, bold text, and sports emojis, overshare and indulge the user with information about the games.  
-        - NO hashtags (#) in formatting - use bold and other typography tools  
+        - NO hashtags (#) in formatting - use bold and other typography tools
+        - Follow the exact format below for each game. EACH GAME MUST HAVE ANALYSIS IN THE FORMAT MENTIONED BELOW. This is EXTREMELY IMPORTANT AND MUST BE DONE FOR EACH AND EVERY PREDICTION.
+        - Prioritise current and advanced deep knowledge of the games. Tell teh user information they cant find on non-llm based services. Find up to date, current & applicable information about games.
+        - Characterise each team and describe the current character of the team in the Characterization bullet point.. 
+        
+        🏆 Final Prediction & Betting Insights:
+        - Win Probability (%): [Team A] X% | [Team B] Y%
+        - Best Bet: [Recommended Bet]
+        - Key Stats & Trends:
+          - 📅 Fixture Details: Date, Venue, Time
+          - 📊 Recent Form: Last 5 Matches (Wins, Draws, Losses)
+          - 🔄 Head-to-Head Record: Last 5 Meetings
+          - 🚑 Injury & Squad Updates: Key Absences & Returning Players
+          - 🌍 Home/Away Impact: Performance at Venue & likliness of significant impact
+          - 🔥 Tactical Insights: Expected play styles, approaches to the game & deep strategic & tactical analysis
+          - 💰 Betting Market Movement: Full analysis on the betting markets position on the game and each team.
+          - 📈 Expert Predictions & Trends: Insights from Analysts
+          - 📈 Characterization: A broad characterization of each team and the match.
     `,
 
 };
