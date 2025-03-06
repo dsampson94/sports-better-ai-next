@@ -9,7 +9,7 @@ export default function Home() {
         {/* Scrollable Content */}
         <main className="flex-1 pt-24 pb-24 overflow-y-auto">
           {/* Hero Section */}
-          <section className="flex flex-col py-24 items-center justify-center text-center px-6 sm:px-12">
+          <section className="flex flex-col py-36 items-center justify-center text-center px-6 sm:px-12">
             <motion.h2
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
