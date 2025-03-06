@@ -138,11 +138,9 @@ export default function DashboardPage() {
         setShowSubscriptionModal(false);
     };
 
-    // Close payment modal and refresh user data if needed
-    const closePaymentModal = () => {
-        setSelectedPlan(null);
-        setShowSubscriptionModal(false);
-        // Optionally refresh user profile here
+    const handlePaymentSuccess = () => {
+        // Here you could refresh the user profile (for example, refetch the profile)
+        console.log('Payment successful!');
     };
 
     return (
@@ -253,9 +251,10 @@ export default function DashboardPage() {
             { showSubscriptionModal && !selectedPlan && (
                 <SubscriptionModal
                     onClose={ () => setShowSubscriptionModal(false) }
-                    onPlanSelect={ handlePlanSelect } onPaymentSuccess={ function (): void {
-                    throw new Error('Function not implemented.');
-                } }/>
+                    onPlanSelect={ handlePlanSelect }
+                    onPaymentSuccess={ handlePaymentSuccess }
+                    selectedPlan={ selectedPlan || undefined }
+                />
             ) }
         </div>
     );

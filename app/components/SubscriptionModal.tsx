@@ -11,15 +11,11 @@ export const plans = {
     premium: { price: 25, aiCalls: 100 },
 };
 
-interface SubscriptionModalProps {
+export interface SubscriptionModalProps {
     onClose: () => void;
-    // When no plan is selected, this is undefined and we show plan selection.
-    // When a plan is selected, this prop is set.
-    selectedPlan?: keyof typeof plans;
-    // Callback when a plan is chosen from the plan selection list.
     onPlanSelect: (planKey: keyof typeof plans) => void;
-    // Callback after successful payment to update token allowance, etc.
     onPaymentSuccess: () => void;
+    selectedPlan?: keyof typeof plans;
 }
 
 const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
