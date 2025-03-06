@@ -5,8 +5,6 @@ import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import SubscriptionModal, { plans } from '../components/SubscriptionModal';
-import TransparentPaymentModal from '../components/TransparentPaymentModal';
-import PayPalPaymentModal from '../components/PayPalPaymentModal';
 
 interface UserProfile {
     email: string;
@@ -151,30 +149,30 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gray-900 text-white flex pt-24 flex-col font-sans">
             <main className="flex-1 px-4">
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
+                    initial={ { opacity: 0, y: 20 } }
+                    animate={ { opacity: 1, y: 0 } }
+                    transition={ { duration: 0.5, delay: 0.3 } }
                     className="w-full max-w-screen-xl mx-auto"
                 >
                     { errorMsg && (
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
+                            initial={ { scale: 0.9, opacity: 0 } }
+                            animate={ { scale: 1, opacity: 1 } }
                             className="bg-red-700 p-3 rounded mb-4 text-red-100 text-center"
                         >
                             { errorMsg }
                         </motion.div>
                     ) }
 
-                    {/* Form stacked vertically */}
+                    {/* Form stacked vertically */ }
                     <form
                         onSubmit={ handleAnalyze }
                         className="flex flex-col space-y-3 w-full mb-6"
                     >
                         <motion.textarea
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
+                            initial={ { opacity: 0, y: 10 } }
+                            animate={ { opacity: 1, y: 0 } }
+                            transition={ { duration: 0.3 } }
                             className="p-4 rounded-lg bg-gray-800 border border-gray-600
                          focus:outline-none focus:ring-2 focus:ring-green-500
                          focus:border-transparent text-sm transition-colors
@@ -185,22 +183,22 @@ export default function DashboardPage() {
                             onChange={ (e) => setQuery(e.target.value) }
                         />
 
-                        {/* Button Container */}
+                        {/* Button Container */ }
                         <div className="flex flex-row space-x-2">
                             <motion.button
                                 type="submit"
                                 disabled={ isButtonDisabled }
-                                className={`
+                                className={ `
                   px-4 py-2 rounded-lg font-semibold text-sm transition 
                   ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
-                `}
+                ` }
                             >
                                 { isButtonDisabled ? 'Get More Tokens' : (loading ? 'Analyzing...' : 'Get Predictions') }
                             </motion.button>
 
                             <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={ { scale: 1.02 } }
+                                whileTap={ { scale: 0.95 } }
                                 onClick={ handleBestBets }
                                 disabled={ loading || (!userProfile.freePredictionCount && userProfile.balance < 0.5) }
                                 className="bg-blue-600 hover:bg-blue-500 px-4 py-2
@@ -212,12 +210,12 @@ export default function DashboardPage() {
                         </div>
                     </form>
 
-                    {/* Render Aggregated Intro if available */}
+                    {/* Render Aggregated Intro if available */ }
                     { finalResult && finalResult.aggregatedIntro && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
+                            initial={ { opacity: 0, y: 10 } }
+                            animate={ { opacity: 1, y: 0 } }
+                            transition={ { duration: 0.5 } }
                             className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md mb-8"
                         >
                             <h3 className="text-xl font-bold text-blue-300 mb-2">Overview</h3>
@@ -225,7 +223,7 @@ export default function DashboardPage() {
                         </motion.div>
                     ) }
 
-                    {/* Render Game Prediction Blocks */}
+                    {/* Render Game Prediction Blocks */ }
                     { finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
                             { finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
@@ -233,7 +231,8 @@ export default function DashboardPage() {
                             )) }
 
                             { finalResult.predictions[0].citations && finalResult.predictions[0].citations.length > 0 && (
-                                <motion.div whileHover={{ scale: 1.02 }} className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md">
+                                <motion.div whileHover={ { scale: 1.02 } }
+                                            className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md">
                                     <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations (All Games)</h3>
                                     <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
                                         { finalResult.predictions[0].citations.map((cite, cIdx) => (
@@ -253,19 +252,11 @@ export default function DashboardPage() {
 
             { showSubscriptionModal && !selectedPlan && (
                 <SubscriptionModal
-                    onClose={() => setShowSubscriptionModal(false)}
-                    onPlanSelect={handlePlanSelect}
-                />
-            )}
-            { selectedPlan && (
-                <PayPalPaymentModal
-                    onClose={closePaymentModal}
-                    selectedPlan={selectedPlan}
-                    onPaymentSuccess={() => {
-                        // Optionally refresh the user profile or update token allowance
-                    }}
-                />
-            )}
+                    onClose={ () => setShowSubscriptionModal(false) }
+                    onPlanSelect={ handlePlanSelect } onPaymentSuccess={ function (): void {
+                    throw new Error('Function not implemented.');
+                } }/>
+            ) }
         </div>
     );
 }
@@ -281,9 +272,9 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            initial={ { opacity: 0, scale: 0.95 } }
+            animate={ { opacity: 1, scale: 1 } }
+            transition={ { duration: 0.5 } }
             className="bg-gray-800 p-6 rounded shadow-lg w-full"
         >
             <h2 className="text-2xl font-bold text-blue-300 mb-1">{ prediction.gameTitle }</h2>
@@ -302,7 +293,8 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                     </button>
                     { !collapsed && (
                         <>
-                            <motion.div whileHover={{ scale: 1.02 }} className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4">
+                            <motion.div whileHover={ { scale: 1.02 } }
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4">
                                 <h3 className="text-xl font-bold mb-2 text-green-400">✅ Final Prediction</h3>
                                 <p className="text-gray-300">
                                     <strong>Win Probability:</strong> { prediction.winProbability }
@@ -324,13 +316,15 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                                     { title: '📝 Characterization', data: prediction.characterization },
                                     { title: '🎯 Overall Recommendation', data: prediction.overallRecommendation },
                                 ].map((item, i) => (
-                                    <motion.div key={ i } whileHover={{ scale: 1.03 }} className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md">
+                                    <motion.div key={ i } whileHover={ { scale: 1.03 } }
+                                                className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md">
                                         <h4 className="text-md font-semibold text-yellow-400">{ item.title }</h4>
                                         <p className="text-gray-300">{ item.data || '' }</p>
                                     </motion.div>
                                 )) }
                             </div>
-                            <motion.div whileHover={{ scale: 1.02 }} className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4">
+                            <motion.div whileHover={ { scale: 1.02 } }
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4">
                                 <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
                                 <pre className="text-sm whitespace-pre-wrap text-gray-300">{ prediction.fullText }</pre>
                             </motion.div>
