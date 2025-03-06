@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from '../../../lib/mongoose';
-import User from '../../../lib/models/User';
+import connectToDatabase from "../../../lib/mongoose";
+import User from "../../../lib/models/User";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+// GET /api/user/[id]
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
     try {
         await connectToDatabase();
-        const user = await User.findById(params.id);
+        const { id } = context.params;
+        const user = await User.findById(id);
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -18,21 +20,24 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+// PATCH /api/user/[id]
+export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
     try {
         await connectToDatabase();
+        const { id } = context.params;
         const body = await req.json();
 
-        // Find and update user by ID
-        let user = await User.findById(params.id);
+        const user = await User.findById(id);
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Update any fields from body
+        // Only allow specific fields to be updated
+        const allowedUpdates = ["username", "balance", "aiCallAllowance", "freePredictionCount"];
         Object.keys(body).forEach((key) => {
-            // @ts-ignore
-            user[key] = body[key];
+            if (allowedUpdates.includes(key)) {
+                (user as any)[key] = body[key];
+            }
         });
 
         await user.save();
@@ -43,10 +48,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+// DELETE /api/user/[id]
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
     try {
         await connectToDatabase();
-        const deletedUser = await User.findByIdAndDelete(params.id);
+        const { id } = context.params;
+        const deletedUser = await User.findByIdAndDelete(id);
 
         if (!deletedUser) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
