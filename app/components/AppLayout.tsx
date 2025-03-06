@@ -21,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     userProfile={userProfile || undefined}
                     onOpenSubscriptionModal={openSubscriptionModal}
                 />
-                <main className="flex-1 overflow-y-auto pt-32 pb-24 px-4 sm:px-6">
+                <main className="flex-1 overflow-y-auto pb-24 px-4 sm:px-6">
                     {children}
                 </main>
                 <Footer />
