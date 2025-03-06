@@ -79,7 +79,7 @@ export default function DashboardPage() {
                 freePredictionCount: prev.freePredictionCount - 1
             }));
 
-            await fetch('/api/user/update-calls', { // Ensure API updates backend
+            await fetch('/api/user/update-calls', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ freePredictionCount: freePredictionCount - 1 }),
@@ -133,7 +133,7 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white flex pt-24 flex-col font-sans">
-            <main className="flex-1 py-4 px-4 sm:px-4">
+            <main className="flex-1 px-4">
                 <motion.div
                     initial={ { opacity: 0, y: 20 } }
                     animate={ { opacity: 1, y: 0 } }
