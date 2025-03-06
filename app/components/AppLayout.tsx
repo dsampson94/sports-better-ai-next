@@ -1,31 +1,53 @@
-// app/components/AppLayout.tsx
 'use client';
-import React, { useState } from "react";
-import Header from "./Header";
-import Footer from "./Footer";
-import SubscriptionModal, { plans } from "./SubscriptionModal";
-import useAuth from "../lib/hooks/useAuth";
+import React, { useEffect, useState } from 'react';
+import Header from './Header';
+import Footer from './Footer';
+import SubscriptionModal, { plans } from './SubscriptionModal';
+import useAuth from '../lib/hooks/useAuth';
+
+interface UserProfile {
+    email: string;
+    username?: string;
+    balance: number;
+    aiCallAllowance: number;
+    freePredictionCount: number;
+}
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, profileLoading, userProfile } = useAuth();
+    const { isAuthenticated, profileLoading } = useAuth();
+
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<keyof typeof plans | null>(null);
 
+    const refreshUserProfile = async () => {
+        try {
+            const res = await fetch('/api/user/me');
+            if (!res.ok) throw new Error('Failed to fetch user profile');
+            const updatedUser = await res.json();
+            setUserProfile(updatedUser);
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+        }
+    };
+
+    useEffect(() => {
+        refreshUserProfile();
+    }, []);
+
     const openSubscriptionModal = () => setShowSubscriptionModal(true);
     const closeSubscriptionModal = () => {
-        setSelectedPlan(null); // Reset plan on close
+        setSelectedPlan(null);
         setShowSubscriptionModal(false);
     };
 
-    // Handler for when a plan is selected within the modal
     const handlePlanSelect = (planKey: keyof typeof plans | null) => {
         setSelectedPlan(planKey);
     };
 
-    // Handler for when a payment is successfully processed
-    const handlePaymentSuccess = () => {
-        console.log("Payment successful!");
-        // Optionally trigger user profile refresh here.
+    const handlePaymentSuccess = async () => {
+        console.log('Payment successful!');
+        await refreshUserProfile();
         setSelectedPlan(null);
         setShowSubscriptionModal(false);
     };
@@ -34,24 +56,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex h-screen overflow-hidden">
             <div className="flex flex-col flex-grow overflow-hidden">
                 <Header
-                    isAuthenticated={isAuthenticated}
-                    profileLoading={profileLoading}
-                    userProfile={userProfile || undefined}
-                    onOpenSubscriptionModal={openSubscriptionModal}
+                    isAuthenticated={ isAuthenticated }
+                    profileLoading={ profileLoading }
+                    userProfile={ userProfile }
+                    refreshUserProfile={ refreshUserProfile }
+                    onOpenSubscriptionModal={ openSubscriptionModal }
                 />
                 <main className="flex-1 overflow-y-auto pb-24 px-4 sm:px-6">
-                    {children}
+                    { children }
                 </main>
-                <Footer />
+                <Footer/>
             </div>
-            {showSubscriptionModal && (
+            { showSubscriptionModal && (
                 <SubscriptionModal
-                    onClose={closeSubscriptionModal}
-                    onPlanSelect={handlePlanSelect}
-                    onPaymentSuccess={handlePaymentSuccess}
-                    selectedPlan={selectedPlan || undefined}
+                    onClose={ closeSubscriptionModal }
+                    onPlanSelect={ handlePlanSelect }
+                    onPaymentSuccess={ handlePaymentSuccess }
+                    selectedPlan={ selectedPlan }
                 />
-            )}
+            ) }
         </div>
     );
 }
