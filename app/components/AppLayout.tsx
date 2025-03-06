@@ -26,6 +26,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </main>
                 <Footer />
             </div>
+            {showSubscriptionModal && (
+                <SubscriptionModal onClose={closeSubscriptionModal} />
+            )}
         </div>
     );
 }
