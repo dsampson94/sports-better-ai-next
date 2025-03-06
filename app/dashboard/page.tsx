@@ -132,7 +132,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col font-sans">
+        <div className="min-h-screen bg-gray-900 text-white flex pt-24 flex-col font-sans">
             <main className="flex-1 py-4 px-4 sm:px-4">
                 <motion.div
                     initial={ { opacity: 0, y: 20 } }

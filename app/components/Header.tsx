@@ -84,7 +84,8 @@ export default function Header({
             className="fixed top-0 left-0 right-0 bg-gray-800 border-b-2 border-[#545b63] p-4 flex justify-between items-center shadow-lg z-50"
         >
             {/* Left: Logo and Title */ }
-            <div className="flex items-center space-x-3">
+            <div onClick={ () => router.push('/dashboard') }
+                 className="flex items-center space-x-3 cursor-pointer">
                 <Image
                     src="/logos/logo-brain.png"
                     alt="SportsBetter AI Logo"
