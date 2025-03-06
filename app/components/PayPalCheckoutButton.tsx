@@ -36,7 +36,7 @@ const PayPalCheckoutButton: React.FC<PayPalCheckoutButtonProps> = ({
                         body: JSON.stringify({ orderID: data.orderID }),
                     })
                         .then((res) => res.json())
-                        .then((captureData) => {
+                        .then(() => {
                             onApprove(data.orderID);
                         });
                 } }

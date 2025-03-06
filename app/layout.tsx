@@ -28,7 +28,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html lang="en" suppressHydrationWarning>
         <head>
-            {/* Replace YOUR_PAYPAL_CLIENT_ID with your actual client ID */ }
             <Script
                 src={ `https://www.paypal.com/sdk/js?client-id=${ process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID }&currency=USD` }
                 strategy="afterInteractive"

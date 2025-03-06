@@ -1,5 +1,5 @@
 // app/components/PayPalPaymentModal.tsx
-"use client";
+'use client';
 import React from "react";
 import PayPalCheckoutButton from "./PayPalCheckoutButton";
 import { plans } from "./SubscriptionModal";
@@ -10,11 +10,7 @@ interface PayPalPaymentModalProps {
     onPaymentSuccess: () => void;
 }
 
-const PayPalPaymentModal: React.FC<PayPalPaymentModalProps> = ({
-                                                                   onClose,
-                                                                   selectedPlan,
-                                                                   onPaymentSuccess,
-                                                               }) => {
+const PayPalPaymentModal: React.FC<PayPalPaymentModalProps> = ({ onClose, selectedPlan, onPaymentSuccess }) => {
     const plan = plans[selectedPlan];
 
     return (

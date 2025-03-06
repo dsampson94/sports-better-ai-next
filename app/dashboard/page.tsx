@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import SubscriptionModal, { plans } from '../components/SubscriptionModal';
 import TransparentPaymentModal from '../components/TransparentPaymentModal';
+import PayPalPaymentModal from '../components/PayPalPaymentModal';
 
 interface UserProfile {
     email: string;
@@ -250,19 +251,21 @@ export default function DashboardPage() {
                 </motion.div>
             </main>
 
-            {/* Show subscription modal or payment modal based on state */}
             { showSubscriptionModal && !selectedPlan && (
                 <SubscriptionModal
-                    onClose={ () => setShowSubscriptionModal(false) }
-                    onPlanSelect={ handlePlanSelect }
+                    onClose={() => setShowSubscriptionModal(false)}
+                    onPlanSelect={handlePlanSelect}
                 />
-            ) }
+            )}
             { selectedPlan && (
-                <TransparentPaymentModal
-                    onClose={ closePaymentModal }
-                    selectedPlan={ selectedPlan }
+                <PayPalPaymentModal
+                    onClose={closePaymentModal}
+                    selectedPlan={selectedPlan}
+                    onPaymentSuccess={() => {
+                        // Optionally refresh the user profile or update token allowance
+                    }}
                 />
-            ) }
+            )}
         </div>
     );
 }
