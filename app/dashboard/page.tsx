@@ -1,10 +1,10 @@
 'use client';
 
 import React, { FormEvent, useEffect, useState } from 'react';
-import { GamePrediction, useAnalysis } from '../../lib/hooks/useAnalysis';
+import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import SubscriptionModal from '../../components/SubscriptionModal';
+import SubscriptionModal from '../components/SubscriptionModal';
 
 interface UserProfile {
     email: string;
