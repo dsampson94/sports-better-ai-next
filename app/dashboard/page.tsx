@@ -136,6 +136,7 @@ export default function DashboardPage() {
     // Handler for when user selects a subscription plan
     const handlePlanSelect = (planKey: keyof typeof plans) => {
         setSelectedPlan(planKey);
+        setShowSubscriptionModal(false);
     };
 
     // Close payment modal and refresh user data if needed
