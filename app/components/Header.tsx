@@ -40,7 +40,7 @@ export default function Header({
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="fixed top-0 left-0 right-0 bg-gray-800 border-b-2 border-[#545b63] p-4 flex justify-between items-center shadow-lg z-50"
+                className="relative top-0 left-0 right-0 bg-gray-800 border-b-2 border-[#545b63] p-4 flex justify-between items-center shadow-lg z-50"
             >
                 <div className="flex items-center space-x-3">
                     <Image

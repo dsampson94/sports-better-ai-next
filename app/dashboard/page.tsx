@@ -133,7 +133,6 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col font-sans">
-            {/* MAIN CONTENT */ }
             <main className="flex-1 py-4 px-4 sm:px-4">
                 <motion.div
                     initial={ { opacity: 0, y: 20 } }
@@ -248,11 +247,6 @@ export default function DashboardPage() {
             { showSubscriptionModal && (
                 <SubscriptionModal onClose={ () => setShowSubscriptionModal(false) }/>
             ) }
-
-            {/* FOOTER */ }
-            <footer className="bg-gray-800 p-4 text-center text-gray-500 text-sm">
-                &copy; { new Date().getFullYear() } SportsBetter AI
-            </footer>
         </div>
     );
 }

@@ -7,9 +7,9 @@ export default function Home() {
   return (
       <div className="min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col relative">
         {/* Scrollable Content */}
-        <main className="flex-1 pt-24 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto">
           {/* Hero Section */}
-          <section className="flex flex-col py-36 items-center justify-center text-center px-6 sm:px-12">
+          <section className="flex flex-col py-32 items-center justify-center text-center px-6 sm:px-12">
             <motion.h2
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

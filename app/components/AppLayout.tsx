@@ -9,7 +9,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex h-screen overflow-hidden">
             <div className="flex flex-col flex-grow overflow-hidden">
                 <Header isAuthenticated={false} profileLoading={false}/>
-                <main className="flex-grow p-3 overflow-y-auto">
+                <main className="flex-grow overflow-y-auto">
                     { children }
                 </main>
                 <Footer/>
