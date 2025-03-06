@@ -129,7 +129,7 @@ export default function Header({
                         initial={ { opacity: 0, y: -8 } }
                         animate={ { opacity: 1, y: 0 } }
                         exit={ { opacity: 0, y: -8 } }
-                        className="absolute right-0 top-24 mt-2 w-44 bg-gray-800 border border-gray-700 rounded shadow-lg z-10"
+                        className="absolute right-0 top-64 mt-2 w-44 bg-gray-800 border border-gray-700 rounded shadow-lg z-10"
                     >
                         <div className="px-4 py-3">
                             <p className="text-sm text-gray-400 font-semibold">
