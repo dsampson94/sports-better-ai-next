@@ -55,7 +55,7 @@ export default function Header({
                             priority
                         />
                     </a>
-                    <h1 className="hidden lg:block text-xl font-bold">
+                    <h1 className="hidden sm:block text-xl font-bold">
                         SportsBetter AI 🏆
                     </h1>
                 </div>
@@ -90,12 +90,11 @@ export default function Header({
                 <Image
                     src="/logos/logo-brain.png"
                     alt="SportsBetter AI Logo"
-                    width={ 40 }
-                    height={ 40 }
-                    className="object-contain"
+                    width={ 100 }
+                    height={ 100 }
                     priority
                 />
-                <h1 className="hidden lg:block text-xl font-bold">SportsBetter AI 🏆</h1>
+                <h1 className="hidden sm:block text-xl font-bold">SportsBetter AI 🏆</h1>
             </div>
             {/* Right: User Section */ }
             <div className="relative flex items-center gap-4">
