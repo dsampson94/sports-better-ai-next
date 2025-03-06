@@ -10,6 +10,7 @@ export default function Home() {
         <main className="flex-1 overflow-y-auto pt-12">
           {/* Hero Section */}
           <section className="flex flex-col py-32 items-center justify-center text-center px-6 sm:px-12">
+            UNDER CONSTRUCTION COME BACK SOON!!!
             <motion.h2
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
