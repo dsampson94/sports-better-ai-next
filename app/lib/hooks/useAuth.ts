@@ -3,11 +3,19 @@
 import { useEffect, useState } from "react";
 
 export interface UserProfile {
+    _id: string;
     email: string;
     username?: string;
+    role: string;
     balance: number;
-    aiCallAllowance: number;
+    subscriptionStatus: string;
+    subscriptionPlan: string;
+    autoRenew: boolean;
+    usageCountThisMonth: number;
     freePredictionCount: number;
+    aiCallAllowance: number;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export default function useAuth() {
@@ -20,7 +28,7 @@ export default function useAuth() {
             try {
                 const res = await fetch("/api/user/me", { credentials: "include" });
                 if (res.ok) {
-                    const data = await res.json();
+                    const data: UserProfile = await res.json();
                     setUserProfile(data);
                     setIsAuthenticated(true);
                 } else {

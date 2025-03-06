@@ -1,70 +1,36 @@
 'use client';
 
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useState } from 'react';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-
-interface UserProfile {
-    email: string;
-    username?: string;
-    balance: number;
-    freePredictionCount: number;
-    aiCallAllowance: number;
-}
+import useAuth from '../lib/hooks/useAuth';
 
 export default function DashboardPage() {
     const router = useRouter();
+    const { userProfile, isAuthenticated, profileLoading } = useAuth();
     const [query, setQuery] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
-    const [userProfile, setUserProfile] = useState<UserProfile>({
-        email: '',
-        username: '',
-        balance: 0,
-        freePredictionCount: 0,
-        aiCallAllowance: 0,
-    });
-    const [profileLoading, setProfileLoading] = useState(true);
     const { finalResult, loading, error, analyze } = useAnalysis();
 
-    useEffect(() => {
-        async function fetchUserProfile() {
-            try {
-                const res = await fetch('/api/user/me');
-                if (!res.ok) throw new Error('Unauthorized');
-                const data = await res.json();
-
-                setUserProfile({
-                    email: data.email || '',
-                    username: data.username || '',
-                    balance: data.balance ?? 0,
-                    freePredictionCount: data.freePredictionCount,
-                    aiCallAllowance: data.aiCallAllowance,
-                });
-            } catch (err) {
-                console.error('Unauthorized access:', err);
-                router.push('/login');
-            } finally {
-                setProfileLoading(false);
-            }
-        }
-
-        fetchUserProfile();
-    }, [router]);
+    // Redirect unauthenticated users
+    if (!isAuthenticated) {
+        router.push('/login');
+        return null;
+    }
 
     // Check if user is the special user "deltaalphavids"
-    const isDeltaAlpha = userProfile.username === 'deltaalphavids';
+    const isDeltaAlpha = userProfile?.username === 'deltaalphavids';
     const isButtonDisabled =
-        userProfile.freePredictionCount <= 0 &&
-        userProfile.aiCallAllowance <= 0 &&
-        userProfile.balance < 0.50;
+        (userProfile?.freePredictionCount ?? 0) <= 0 &&
+        (userProfile?.aiCallAllowance ?? 0) <= 0;
 
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
-        setErrorMsg("");
+        setErrorMsg('');
 
-        if (!userProfile.email) {
-            setErrorMsg("Error: No email found.");
+        if (!userProfile?._id) {
+            setErrorMsg('Error: User ID not found.');
             return;
         }
 
@@ -75,40 +41,32 @@ export default function DashboardPage() {
         } else if (userProfile.aiCallAllowance > 0) {
             updatedUserData.aiCallAllowance -= 1;
         } else {
-            setErrorMsg("You have used all AI calls. Please purchase more tokens.");
+            setErrorMsg('You have used all AI calls. Please purchase more tokens.');
             return;
         }
 
-        // Optimistically update UI
-        setUserProfile(updatedUserData);
-
         try {
-            const response = await fetch(`/api/user`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+            // Update user data in DB
+            const response = await fetch(`/api/user/${ userProfile._id }`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: userProfile.email,
                     freePredictionCount: updatedUserData.freePredictionCount,
-                    aiCallAllowance: updatedUserData.aiCallAllowance
+                    aiCallAllowance: updatedUserData.aiCallAllowance,
                 }),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to update user profile");
+                throw new Error('Failed to update user profile');
             }
 
-            const updatedData = await response.json();
-            setUserProfile(updatedData);
+            await analyze(query);
         } catch (error) {
-            console.error("Error updating user profile:", error);
-            setErrorMsg("Something went wrong. Please try again.");
-            setUserProfile(userProfile);
+            console.error('Error updating user profile:', error);
+            setErrorMsg('Something went wrong. Please try again.');
         }
-
-        await analyze(query);
     }
 
-    // "Get Best Bets" button handler remains unchanged
     async function handleBestBets(e: FormEvent) {
         e.preventDefault();
         setErrorMsg('');
@@ -139,34 +97,31 @@ export default function DashboardPage() {
                         </motion.div>
                     ) }
 
-                    {/* Form stacked vertically */ }
-                    <form
-                        onSubmit={ handleAnalyze }
-                        className="flex flex-col space-y-3 w-full mb-6"
-                    >
+                    {/* Form */ }
+                    <form onSubmit={ handleAnalyze } className="flex flex-col space-y-3 w-full mb-6">
                         <motion.textarea
                             initial={ { opacity: 0, y: 10 } }
                             animate={ { opacity: 1, y: 0 } }
                             transition={ { duration: 0.3 } }
                             className="p-4 rounded-lg bg-gray-800 border border-gray-600
-                         focus:outline-none focus:ring-2 focus:ring-green-500
-                         focus:border-transparent text-sm transition-colors
-                         ease-in-out duration-150 w-full"
+                             focus:outline-none focus:ring-2 focus:ring-green-500
+                             focus:border-transparent text-sm transition-colors
+                             ease-in-out duration-150 w-full"
                             rows={ 1 }
                             placeholder='e.g. "Who will likely win the next big rugby match?"'
                             value={ query }
                             onChange={ (e) => setQuery(e.target.value) }
                         />
 
-                        {/* Button Container */ }
+                        {/* Buttons */ }
                         <div className="flex flex-row space-x-2">
                             <motion.button
                                 type="submit"
                                 disabled={ isButtonDisabled }
                                 className={ `
-                  px-4 py-2 rounded-lg font-semibold text-sm transition 
-                  ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
-                ` }
+                                    px-4 py-2 rounded-lg font-semibold text-sm transition 
+                                    ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
+                                ` }
                             >
                                 { isButtonDisabled ? 'Get More Tokens' : (loading ? 'Analyzing...' : 'Get Predictions') }
                             </motion.button>
@@ -175,17 +130,17 @@ export default function DashboardPage() {
                                 whileHover={ { scale: 1.02 } }
                                 whileTap={ { scale: 0.95 } }
                                 onClick={ handleBestBets }
-                                disabled={ loading || (!userProfile.freePredictionCount && userProfile.balance < 0.5) }
+                                disabled={ loading }
                                 className="bg-blue-600 hover:bg-blue-500 px-4 py-2
-                           rounded-lg text-white font-semibold text-sm
-                           transition-colors ease-in-out duration-150 w-auto"
+                                rounded-lg text-white font-semibold text-sm
+                                transition-colors ease-in-out duration-150 w-auto"
                             >
                                 Get Best Bets
                             </motion.button>
                         </div>
                     </form>
 
-                    {/* Render Aggregated Intro if available */ }
+                    {/* Results */ }
                     { finalResult && finalResult.aggregatedIntro && (
                         <motion.div
                             initial={ { opacity: 0, y: 10 } }
@@ -198,7 +153,7 @@ export default function DashboardPage() {
                         </motion.div>
                     ) }
 
-                    {/* Render Game Prediction Blocks */ }
+                    {/* Predictions */ }
                     { finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
                             { finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
