@@ -2,22 +2,14 @@
 
 import React, { FormEvent, useState } from 'react';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import useAuth from '../lib/hooks/useAuth';
 
 export default function DashboardPage() {
-    const router = useRouter();
-    const { userProfile, isAuthenticated, profileLoading } = useAuth();
+    const { userProfile } = useAuth();
     const [query, setQuery] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
     const { finalResult, loading, error, analyze } = useAnalysis();
-
-    // Redirect unauthenticated users
-    if (!isAuthenticated) {
-        router.push('/login');
-        return null;
-    }
 
     // Check if user is the special user "deltaalphavids"
     const isDeltaAlpha = userProfile?.username === 'deltaalphavids';
