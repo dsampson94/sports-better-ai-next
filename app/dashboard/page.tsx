@@ -4,7 +4,6 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import SubscriptionModal, { plans } from '../components/SubscriptionModal';
 
 interface UserProfile {
     email: string;
@@ -26,10 +25,6 @@ export default function DashboardPage() {
         aiCallAllowance: 0,
     });
     const [profileLoading, setProfileLoading] = useState(true);
-    // State to control modals:
-    const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState<keyof typeof plans | null>(null);
-
     const { finalResult, loading, error, analyze } = useAnalysis();
 
     useEffect(() => {
@@ -131,17 +126,6 @@ export default function DashboardPage() {
         }
         await analyze('Get best bets');
     }
-
-    // Handler for when user selects a subscription plan
-    const handlePlanSelect = (planKey: keyof typeof plans) => {
-        setSelectedPlan(planKey);
-        setShowSubscriptionModal(false);
-    };
-
-    const handlePaymentSuccess = () => {
-        // Here you could refresh the user profile (for example, refetch the profile)
-        console.log('Payment successful!');
-    };
 
     return (
         <div className="min-h-screen bg-gray-900 text-white flex pt-24 flex-col font-sans">
@@ -247,15 +231,6 @@ export default function DashboardPage() {
                     ) }
                 </motion.div>
             </main>
-
-            { showSubscriptionModal && !selectedPlan && (
-                <SubscriptionModal
-                    onClose={ () => setShowSubscriptionModal(false) }
-                    onPlanSelect={ handlePlanSelect }
-                    onPaymentSuccess={ handlePaymentSuccess }
-                    selectedPlan={ selectedPlan || undefined }
-                />
-            ) }
         </div>
     );
 }
