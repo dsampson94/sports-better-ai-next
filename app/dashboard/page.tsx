@@ -1,9 +1,9 @@
 'use client';
 
 import React, { FormEvent, useState } from 'react';
-import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { motion } from 'framer-motion';
 import useAuth from '../lib/hooks/useAuth';
+import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 
 export default function DashboardPage() {
     const { userProfile } = useAuth();
@@ -11,7 +11,6 @@ export default function DashboardPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const { finalResult, loading, error, analyze } = useAnalysis();
 
-    // Check if user is the special user "deltaalphavids"
     const isDeltaAlpha = userProfile?.username === 'deltaalphavids';
     const isButtonDisabled =
         (userProfile?.freePredictionCount ?? 0) <= 0 &&
@@ -26,35 +25,10 @@ export default function DashboardPage() {
             return;
         }
 
-        let updatedUserData = { ...userProfile };
-
-        if (userProfile.freePredictionCount > 0) {
-            updatedUserData.freePredictionCount -= 1;
-        } else if (userProfile.aiCallAllowance > 0) {
-            updatedUserData.aiCallAllowance -= 1;
-        } else {
-            setErrorMsg('You have used all AI calls. Please purchase more tokens.');
-            return;
-        }
-
         try {
-            // Update user data in DB
-            const response = await fetch(`/api/user/${ userProfile._id }`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    freePredictionCount: updatedUserData.freePredictionCount,
-                    aiCallAllowance: updatedUserData.aiCallAllowance,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update user profile');
-            }
-
             await analyze(query);
         } catch (error) {
-            console.error('Error updating user profile:', error);
+            console.error('Error analyzing prediction:', error);
             setErrorMsg('Something went wrong. Please try again.');
         }
     }
@@ -115,7 +89,7 @@ export default function DashboardPage() {
                                     ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
                                 ` }
                             >
-                                { isButtonDisabled ? 'Get More Tokens' : (loading ? 'Analyzing...' : 'Get Predictions') }
+                                { isButtonDisabled ? 'Get More Tokens' : loading ? 'Analyzing...' : 'Get Predictions' }
                             </motion.button>
 
                             <motion.button
@@ -175,7 +149,6 @@ export default function DashboardPage() {
     );
 }
 
-// Component for each prediction block with collapse functionality
 interface PredictionBlockProps {
     prediction: GamePrediction;
 }

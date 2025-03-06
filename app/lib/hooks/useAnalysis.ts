@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import useAuth from './useAuth';
 
 // Each game’s data structure
 export interface GamePrediction {
@@ -20,7 +21,6 @@ export interface GamePrediction {
     overallRecommendation: string;
     fullText: string;
     citations?: string[];
-    updatedBalance?: number;
     aiCallAllowance?: number;
 }
 
@@ -30,38 +30,70 @@ export interface AnalysisResult {
 }
 
 export function useAnalysis() {
+    const { userProfile, setUserProfile } = useAuth();
     const [finalResult, setFinalResult] = useState<AnalysisResult | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string>('');
-    const [userBalance, setUserBalance] = useState<number>(0);
-    const [aiCallAllowance, setAiCallAllowance] = useState<number>(0);
+    const [error, setError] = useState<string | null>(null);
 
-    async function analyze(userInput: string) {
-        setLoading(true);
-        setFinalResult(null);
-        setError('');
+    /**
+     * Deducts AI calls before making the request.
+     */
+    const deductAiCall = useCallback(async (): Promise<boolean> => {
+        if (!userProfile?._id) {
+            setError('User ID not found.');
+            return false;
+        }
 
         try {
-            // ✅ Step 1: Deduct AI Call / Balance BEFORE sending request
-            const updateRes = await fetch('/api/user/update-usage', {
-                method: 'POST',
+            // Determine which value to deduct first
+            const updatedValues: Partial<{ freePredictionCount: number; aiCallAllowance: number }> = {};
+            if (userProfile.freePredictionCount > 0) {
+                updatedValues.freePredictionCount = userProfile.freePredictionCount - 1;
+            } else if (userProfile.aiCallAllowance > 0) {
+                updatedValues.aiCallAllowance = userProfile.aiCallAllowance - 1;
+            } else {
+                setError('No available AI calls left. Please purchase tokens.');
+                return false;
+            }
+
+            // PATCH request to update user AI calls
+            const res = await fetch(`/api/user/${userProfile._id}`, {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedValues),
             });
-            const updateData = await updateRes.json();
 
-            if (updateData.error) {
-                throw new Error(updateData.error);
+            const updatedUser = await res.json();
+            if (!res.ok || updatedUser.error) {
+                throw new Error(updatedUser.error || 'Failed to update AI calls.');
             }
 
-            // ✅ Step 2: Update UI state before fetching results
-            setUserBalance(updateData.updatedBalance);
-            setAiCallAllowance(updateData.aiCallAllowance);
+            // Update UI with new AI call allowance
+            setUserProfile(updatedUser);
+            return true;
+        } catch (err) {
+            console.error('❌ Error deducting AI call:', err);
+            setError('Network error. Please try again.');
+            return false;
+        }
+    }, [userProfile, setUserProfile]);
 
-            if (updateData.aiCallAllowance <= 0 && updateData.updatedBalance <= 0) {
-                throw new Error('Insufficient AI calls and balance. Please purchase tokens.');
+    /**
+     * Fetch AI predictions.
+     */
+    const analyze = useCallback(async (userInput: string) => {
+        setLoading(true);
+        setFinalResult(null);
+        setError(null);
+
+        try {
+            // Step 1: Ensure AI call allowance is available before proceeding
+            const hasCallsLeft = await deductAiCall();
+            if (!hasCallsLeft) {
+                throw new Error('No AI calls left. Please purchase tokens.');
             }
 
-            // ✅ Step 3: Fetch web search data
+            // Step 2: Web Search API Call
             const webSearchRes = await fetch('/api/analysis/web-search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -71,7 +103,7 @@ export function useAnalysis() {
             if (webSearchData.error) throw new Error(webSearchData.error);
             const perplexityData = webSearchData.perplexityData;
 
-            // ✅ Step 4: Fetch AI response analysis
+            // Step 3: AI Response Analysis API Call
             const responseAnalysisRes = await fetch('/api/analysis/response-analysis', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -81,7 +113,7 @@ export function useAnalysis() {
             if (responseAnalysisData.error) throw new Error(responseAnalysisData.error);
             const partialResponses = responseAnalysisData.partialResponses;
 
-            // ✅ Step 5: Fetch final aggregator
+            // Step 4: Final Aggregated Analysis
             const aggregatorRes = await fetch('/api/analysis/analysis-aggregator', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -90,96 +122,54 @@ export function useAnalysis() {
             const aggregatorData = await aggregatorRes.json();
             if (aggregatorData.error) throw new Error(aggregatorData.error);
 
-            let aggregated = aggregatorData.finalAnswer.finalAnswer || aggregatorData.finalAnswer || '';
+            // Extract final answer
+            let aggregated = aggregatorData.finalAnswer?.finalAnswer || aggregatorData.finalAnswer || '';
 
-            // ✅ Step 6: Split aggregated text into intro and game blocks
-            let introText = '';
-            let gameText = aggregated;
+            // Step 5: Process AI Response and Structure Predictions
             const splitIndex = aggregated.indexOf('🏆 Game Title:');
-            if (splitIndex !== -1) {
-                introText = aggregated.slice(0, splitIndex).trim();
-                if (!introText.startsWith('🔮')) {
-                    introText = '';
-                }
-                gameText = aggregated.slice(splitIndex);
-            }
+            const introText = splitIndex !== -1 ? aggregated.slice(0, splitIndex).trim() : '';
+            const gameText = splitIndex !== -1 ? aggregated.slice(splitIndex) : aggregated;
 
             const gameBlocks = gameText
                 .split(/(?=🏆 Game Title:)/g)
-                .map((b: string) => b.trim())
+                .map((b) => b.trim())
                 .filter(Boolean);
 
-            function extractBetween(text: string, start: string, end: string | null): string {
-                const colonOpt = '\\s*:?';
-                let pattern: RegExp;
-                if (end) {
-                    pattern = new RegExp(`${start}${colonOpt}\\s*(.*?)\\s*(?=${end})`, 's');
-                } else {
-                    pattern = new RegExp(`${start}${colonOpt}\\s*(.*)`, 's');
-                }
-                const match = text.match(pattern);
-                return match ? match[1].trim() : '';
-            }
+            const extractBetween = (text: string, start: string, end?: string) => {
+                const pattern = end
+                    ? new RegExp(`${start}\\s*:?\\s*(.*?)\\s*(?=${end})`, 's')
+                    : new RegExp(`${start}\\s*:?\\s*(.*)`, 's');
+                return text.match(pattern)?.[1]?.trim() || '';
+            };
 
-            const predictions: GamePrediction[] = gameBlocks.map((block) => {
-                const lines = block.split('\n');
-                const firstLine = lines[0]?.trim() || '';
-                const gameTitle = firstLine.replace(/^🏆 Game Title:\s*/, '').trim();
-
-                let competition = '';
-                for (const line of lines) {
-                    if (line.startsWith('Competition:')) {
-                        competition = line.replace('Competition:', '').trim();
-                        break;
-                    }
-                }
-
-                const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
-                const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
-
-                const winProbability = extractBetween(bulletSection, '- Win Probability', '- Best Bet:');
-                const bestBet = extractBetween(bulletSection, '- Best Bet:', '- Key Stats & Trends:');
-                const fixtureDetails = extractBetween(bulletSection, '- 📅 Fixture Details:', '- 📊 Recent Form:');
-                const recentForm = extractBetween(bulletSection, '- 📊 Recent Form:', '- 🔄 Head-to-Head');
-                const headToHead = extractBetween(bulletSection, '- 🔄 Head-to-Head Record:', '- 🚑 Injury & Squad Updates:');
-                const injuryUpdates = extractBetween(bulletSection, '- 🚑 Injury & Squad Updates:', '- 🌍 Home/Away Impact:');
-                const homeAwayImpact = extractBetween(bulletSection, '- 🌍 Home/Away Impact:', '- 🔥 Tactical Insights:');
-                const tacticalInsights = extractBetween(bulletSection, '- 🔥 Tactical Insights:', '- 💰 Betting Market Movement:');
-                const bettingMarketMovement = extractBetween(bulletSection, '- 💰 Betting Market Movement:', '- 💡 Expert Predictions & Trends:');
-                const expertPredictions = extractBetween(bulletSection, '- 💡 Expert Predictions & Trends:', '- 📝 Characterization:');
-                const characterization = extractBetween(bulletSection, '- 📝 Characterization:', '- 🎯 Overall Recommendation:');
-                const overallRecommendation = extractBetween(bulletSection, '- 🎯 Overall Recommendation:', null);
-
-                return {
-                    gameTitle,
-                    competition,
-                    winProbability,
-                    bestBet,
-                    fixtureDetails,
-                    recentForm,
-                    headToHead,
-                    injuryUpdates,
-                    homeAwayImpact,
-                    tacticalInsights,
-                    bettingMarketMovement,
-                    expertPredictions,
-                    characterization,
-                    overallRecommendation,
-                    fullText: block,
-                    citations: aggregatorData.citations || [],
-                    updatedBalance: userBalance,
-                    aiCallAllowance: aiCallAllowance,
-                };
-            });
+            const predictions: GamePrediction[] = gameBlocks.map((block) => ({
+                gameTitle: extractBetween(block, '🏆 Game Title:'),
+                competition: extractBetween(block, 'Competition:', 'Win Probability'),
+                winProbability: extractBetween(block, 'Win Probability', 'Best Bet'),
+                bestBet: extractBetween(block, 'Best Bet:', 'Fixture Details'),
+                fixtureDetails: extractBetween(block, 'Fixture Details:', 'Recent Form'),
+                recentForm: extractBetween(block, 'Recent Form:', 'Head-to-Head'),
+                headToHead: extractBetween(block, 'Head-to-Head Record:', 'Injury Updates'),
+                injuryUpdates: extractBetween(block, 'Injury & Squad Updates:', 'Home/Away Impact'),
+                homeAwayImpact: extractBetween(block, 'Home/Away Impact:', 'Tactical Insights'),
+                tacticalInsights: extractBetween(block, 'Tactical Insights:', 'Betting Market Movement'),
+                bettingMarketMovement: extractBetween(block, 'Betting Market Movement:', 'Expert Predictions'),
+                expertPredictions: extractBetween(block, 'Expert Predictions:', 'Characterization'),
+                characterization: extractBetween(block, 'Characterization:', 'Overall Recommendation'),
+                overallRecommendation: extractBetween(block, 'Overall Recommendation'),
+                fullText: block,
+                citations: aggregatorData.citations || [],
+                aiCallAllowance: userProfile?.aiCallAllowance ?? 0,
+            }));
 
             setFinalResult({ predictions, aggregatedIntro: introText });
-        } catch (e: any) {
-            setError(e.message || 'Error analyzing input.');
-            console.error('❌ Analysis Error:', e.message);
+        } catch (err: any) {
+            setError(err.message || 'Error analyzing input.');
+            console.error('❌ Analysis Error:', err.message);
         } finally {
             setLoading(false);
         }
-    }
+    }, [deductAiCall, userProfile]);
 
-    return { finalResult, loading, error, analyze, userBalance, aiCallAllowance };
+    return { finalResult, loading, error, analyze };
 }

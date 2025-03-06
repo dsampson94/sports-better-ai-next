@@ -44,5 +44,5 @@ export default function useAuth() {
         fetchUserProfile();
     }, []);
 
-    return { isAuthenticated, profileLoading, userProfile };
+    return { isAuthenticated, profileLoading, userProfile, setUserProfile };
 }
