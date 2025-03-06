@@ -1,25 +1,27 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { logout } from "../lib/auth";
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { logout } from '../lib/auth';
 
 interface UserProfile {
     email: string;
     username?: string;
     balance: number;
     aiCallAllowance: number;
+    freePredictionCount: number;
 }
 
 interface HeaderProps {
     isAuthenticated: boolean;
     profileLoading: boolean;
-    userProfile?: UserProfile;
+    userProfile?: UserProfile | undefined;
     isDeltaAlpha?: boolean;
     onOpenSubscriptionModal?: () => void;
+    freePredictionCount?: number;
 }
 
 export default function Header({
@@ -36,14 +38,14 @@ export default function Header({
 
     const logoSection = (
         <div
-            onClick={() => router.push(isAuthenticated ? "/dashboard" : "/")}
+            onClick={ () => router.push(isAuthenticated ? '/dashboard' : '/') }
             className="flex items-center space-x-3 cursor-pointer"
         >
             <Image
                 src="/logos/logo-brain.png"
                 alt="SportsBetter AI Logo"
-                width={40}
-                height={40}
+                width={ 40 }
+                height={ 40 }
                 className="object-contain"
                 priority
             />
@@ -55,13 +57,14 @@ export default function Header({
     if (profileLoading) {
         return (
             <motion.header
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                initial={ { opacity: 0, y: -20 } }
+                animate={ { opacity: 1, y: 0 } }
+                transition={ { duration: 0.5 } }
                 className="fixed top-0 left-0 right-0 bg-gray-800 border-b-2 border-[#545b63] p-4 flex justify-between items-center shadow-lg z-50"
             >
-                {logoSection}
-                <div className="w-40" /> {/* Reserve space on the right */}
+                { logoSection }
+                <div className="w-40"/>
+                {/* Reserve space on the right */ }
             </motion.header>
         );
     }
@@ -70,12 +73,12 @@ export default function Header({
     if (!isAuthenticated) {
         return (
             <motion.header
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                initial={ { opacity: 0, y: -20 } }
+                animate={ { opacity: 1, y: 0 } }
+                transition={ { duration: 0.5 } }
                 className="fixed top-0 left-0 right-0 bg-gray-800 border-b-2 border-[#545b63] p-4 flex justify-between items-center shadow-lg z-50"
             >
-                {logoSection}
+                { logoSection }
                 <div className="flex gap-4">
                     <Link
                         href="/login"
@@ -97,30 +100,30 @@ export default function Header({
     // Authenticated header: render interactive buttons once loaded
     return (
         <motion.header
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={ { opacity: 0, y: -20 } }
+            animate={ { opacity: 1, y: 0 } }
+            transition={ { duration: 0.5 } }
             className="fixed top-0 left-0 right-0 bg-gray-800 border-b-2 border-[#545b63] p-4 flex justify-between items-center shadow-lg z-50"
         >
-            {logoSection}
+            { logoSection }
             <div className="relative flex items-center gap-4">
-                {onOpenSubscriptionModal && (
+                { onOpenSubscriptionModal && (
                     <button
-                        onClick={onOpenSubscriptionModal}
+                        onClick={ onOpenSubscriptionModal }
                         className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150"
                     >
                         Get Tokens
                     </button>
-                )}
+                ) }
                 <button
-                    onClick={toggleDropdown}
+                    onClick={ toggleDropdown }
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition"
                 >
                     <svg
                         className="w-5 h-5 text-gray-300"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth={2}
+                        strokeWidth={ 2 }
                         viewBox="0 0 24 24"
                     >
                         <path
@@ -130,51 +133,51 @@ export default function Header({
                         />
                     </svg>
                 </button>
-                {dropdownOpen && (
+                { dropdownOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
+                        initial={ { opacity: 0, y: -8 } }
+                        animate={ { opacity: 1, y: 0 } }
+                        exit={ { opacity: 0, y: -8 } }
                         className="absolute right-0 top-full mt-3 w-44 bg-gray-800 border border-gray-700 rounded shadow-lg z-10"
                     >
                         <div className="px-4 py-3">
-                            <p className="text-sm text-gray-400 font-semibold">
-                                Hello, {userProfile?.username || userProfile?.email}
-                            </p>
-                            <p className="text-sm text-gray-300 mt-1">
-                                <strong>Balance:</strong> ${userProfile?.balance.toFixed(2)}
+                            <p className="text-sm text-gray-300">
+                                <strong>Balance:</strong> ${ userProfile?.balance.toFixed(2) }
                             </p>
                             <p className="text-sm text-gray-300">
-                                <strong>AI Calls Remaining:</strong> {userProfile?.aiCallAllowance}
+                                <strong>Free Calls:</strong> { userProfile?.freePredictionCount }
+                            </p>
+                            <p className="text-sm text-gray-300">
+                                <strong>Token Allowance:</strong> { userProfile?.aiCallAllowance }
                             </p>
                         </div>
                         <div className="border-t border-gray-700">
                             <button
-                                onClick={() => {
+                                onClick={ () => {
                                     setDropdownOpen(false);
-                                    router.push("/add-credit");
-                                }}
+                                    router.push('/add-credit');
+                                } }
                                 className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
                             >
                                 Add Credit
                             </button>
-                            {isDeltaAlpha && (
+                            { isDeltaAlpha && (
                                 <button
-                                    onClick={() => router.push("/dashboard/admin")}
+                                    onClick={ () => router.push('/dashboard/admin') }
                                     className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
                                 >
                                     Admin Dashboard
                                 </button>
-                            )}
+                            ) }
                             <button
-                                onClick={logout}
+                                onClick={ logout }
                                 className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
                             >
                                 Logout
                             </button>
                         </div>
                     </motion.div>
-                )}
+                ) }
             </div>
         </motion.header>
     );

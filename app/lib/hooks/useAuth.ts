@@ -7,6 +7,7 @@ export interface UserProfile {
     username?: string;
     balance: number;
     aiCallAllowance: number;
+    freePredictionCount: number;
 }
 
 export default function useAuth() {

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { FormEvent, useEffect, useState } from 'react';
-import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
+import { GamePrediction, useAnalysis } from '../../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import SubscriptionModal from './SubscriptionModal';
+import SubscriptionModal from '../../components/SubscriptionModal';
 
 interface UserProfile {
     email: string;
@@ -58,7 +58,10 @@ export default function DashboardPage() {
 
     // Check if user is the special user "deltaalphavids"
     const isDeltaAlpha = userProfile.username === 'deltaalphavids';
-    const isButtonDisabled = userProfile.aiCallAllowance === 0 && userProfile.balance < 0.5;
+    const isButtonDisabled =
+        userProfile.freePredictionCount <= 0 &&
+        userProfile.aiCallAllowance <= 0 &&
+        userProfile.balance < 0.50;
 
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();

@@ -1,52 +1,20 @@
-'use client';
+"use client";
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import axios from 'axios';
 
 interface SubscriptionModalProps {
     onClose: () => void;
+    onPlanSelect?: (planKey: keyof typeof plans) => void;
 }
 
-const plans = {
+export const plans = {
     basic: { price: 5, aiCalls: 20 },
     standard: { price: 10, aiCalls: 40 },
     premium: { price: 25, aiCalls: 100 },
 };
 
-const SubscriptionModal = ({ onClose }: SubscriptionModalProps) => {
-    const handleSubscribe = async (plan: keyof typeof plans) => {
-        const { price, aiCalls } = plans[plan];
-
-        try {
-            const response = await axios.post('/api/payfast/pay-now', {
-                amount: price,
-                itemName: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan - ${aiCalls} AI Calls`,
-                orderId: `sub-${plan}-${Date.now()}`,
-            });
-
-            const { actionUrl, formData } = response.data;
-
-            const form = document.createElement('form');
-            form.action = actionUrl;
-            form.method = 'POST';
-
-            Object.entries(formData).forEach(([key, value]) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = value as string;
-                form.appendChild(input);
-            });
-
-            document.body.appendChild(form);
-            form.submit();
-        } catch (error) {
-            console.error('Payment initialization error:', error);
-            alert('An error occurred during payment initialization. Please try again.');
-        }
-    };
-
+const SubscriptionModal = ({ onClose, onPlanSelect }: SubscriptionModalProps) => {
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -77,14 +45,12 @@ const SubscriptionModal = ({ onClose }: SubscriptionModalProps) => {
                     {Object.entries(plans).map(([key, { price, aiCalls }]) => (
                         <button
                             key={key}
-                            onClick={() => handleSubscribe(key as keyof typeof plans)}
+                            onClick={() => onPlanSelect ? onPlanSelect(key as keyof typeof plans) : null }
                             className="w-full text-left flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 transition rounded-lg border border-gray-700"
                         >
                             <div>
                                 <h3 className="text-lg font-semibold capitalize text-white">{key} Plan</h3>
-                                <p className="text-sm text-gray-400">
-                                    {aiCalls} AI Calls
-                                </p>
+                                <p className="text-sm text-gray-400">{aiCalls} AI Calls</p>
                             </div>
                             <span className="text-lg font-semibold text-white">${price}</span>
                         </button>

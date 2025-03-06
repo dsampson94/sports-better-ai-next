@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
-import SubscriptionModal from "../dashboard/SubscriptionModal";
+import SubscriptionModal from "./SubscriptionModal";
 import useAuth from "../lib/hooks/useAuth";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
