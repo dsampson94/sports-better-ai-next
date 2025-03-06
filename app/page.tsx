@@ -7,7 +7,7 @@ export default function Home() {
   return (
       <div className="min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col relative">
         {/* Scrollable Content */}
-        <main className="flex-1 pt-24 pb-24 overflow-y-auto">
+        <main className="flex-1 pt-24 overflow-y-auto">
           {/* Hero Section */}
           <section className="flex flex-col py-36 items-center justify-center text-center px-6 sm:px-12">
             <motion.h2
@@ -188,18 +188,6 @@ export default function Home() {
             </div>
           </section>
         </main>
-
-        {/* Fixed Footer */}
-        <motion.footer
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed bottom-0 left-0 right-0 bg-gray-800 text-center py-4 shadow-lg z-50"
-        >
-          <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} SportsBetter AI. All rights reserved.
-          </p>
-        </motion.footer>
       </div>
   );
 }

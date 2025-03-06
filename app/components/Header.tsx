@@ -34,7 +34,7 @@ export default function Header({
     const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
     if (!isAuthenticated) {
-        // Render simple header for non-logged in users.
+        // Non-authenticated header
         return (
             <motion.header
                 initial={{ opacity: 0, y: -20 }}
@@ -48,7 +48,8 @@ export default function Header({
                         alt="SportsBetter AI Logo"
                         width={40}
                         height={40}
-                        className="h-12 w-auto sm:h-16"
+                        className="object-contain"
+                        priority
                     />
                     <h1 className="hidden lg:block text-xl font-bold">
                         SportsBetter AI 🏆
@@ -72,7 +73,7 @@ export default function Header({
         );
     }
 
-    // Render full app header for authenticated users.
+    // Authenticated header (if needed)
     return (
         <motion.header
             initial={{ opacity: 0, y: -20 }}
@@ -87,7 +88,8 @@ export default function Header({
                     alt="SportsBetter AI Logo"
                     width={40}
                     height={40}
-                    className="h-16 w-auto sm:h-[110px]"
+                    className="object-contain"
+                    priority
                 />
                 <h1 className="hidden lg:block text-xl font-bold">SportsBetter AI 🏆</h1>
             </div>
@@ -105,7 +107,6 @@ export default function Header({
                     onClick={toggleDropdown}
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition"
                 >
-                    {/* User icon */}
                     <svg
                         className="w-5 h-5 text-gray-300"
                         fill="none"
