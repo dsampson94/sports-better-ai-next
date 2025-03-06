@@ -27,7 +27,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="bg-gray-900 text-white flex items-center justify-center p-4">
+        <div className="bg-gray-900 text-white flex items-center justify-center p-4 pt-40">
             <div className="max-w-md w-full bg-gray-800 p-6 rounded shadow">
                 <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
                 <p className="text-gray-400 mb-4 text-center">
