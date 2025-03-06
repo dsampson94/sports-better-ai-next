@@ -7,7 +7,7 @@ if (!MONGODB_URI) {
 }
 
 // Global cache to prevent re-establishing DB connections on hot reloads
-let cached = global.mongoose || { conn: null, promise: null };
+let cached = (global as any).mongoose || { conn: null, promise: null };
 
 async function connectToDatabase() {
     if (cached.conn) {
@@ -19,12 +19,21 @@ async function connectToDatabase() {
         console.log('🔗 Connecting to MongoDB...');
         cached.promise = mongoose
             .connect(MONGODB_URI as string, {
-                maxPoolSize: 10, // Prevent too many open connections
-                serverSelectionTimeoutMS: 5000, // Avoid infinite wait on DB connection
+                maxPoolSize: 5, // 🔥 Reduce max connections (prevents overload)
+                minPoolSize: 2, // 🔥 Keep some connections alive
+                serverSelectionTimeoutMS: 5000, // Avoid infinite retries
+                socketTimeoutMS: 45000, // Avoid long-hanging requests
                 connectTimeoutMS: 10000, // Ensure connections timeout properly
             })
             .then((mongoose) => {
                 console.log('✅ MongoDB Connected Successfully');
+
+                // Log disconnection events for debugging
+                mongoose.connection.on('disconnected', () => {
+                    console.log('❌ MongoDB Disconnected. Reconnecting...');
+                    cached.conn = null;
+                });
+
                 return mongoose;
             })
             .catch((err) => {
@@ -38,6 +47,6 @@ async function connectToDatabase() {
 }
 
 // Save cached instance globally for hot reloads
-global.mongoose = cached;
+(global as any).mongoose = cached;
 
 export default connectToDatabase;
