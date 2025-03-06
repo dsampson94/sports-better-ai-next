@@ -34,10 +34,12 @@ export default function Header({
 
     const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-    // Always render the logo and title, regardless of loading.
+    // Logo and title are always rendered
     const logoSection = (
-        <div onClick={() => router.push(isAuthenticated ? "/dashboard" : "/")}
-             className="flex items-center space-x-3 cursor-pointer">
+        <div
+            onClick={() => router.push(isAuthenticated ? "/dashboard" : "/")}
+            className="flex items-center space-x-3 cursor-pointer"
+        >
             <Image
                 src="/logos/logo-brain.png"
                 alt="SportsBetter AI Logo"
@@ -50,7 +52,7 @@ export default function Header({
         </div>
     );
 
-    // If not authenticated, render the static header.
+    // Non-authenticated header: show logo and auth links
     if (!isAuthenticated) {
         return (
             <motion.header
@@ -78,7 +80,7 @@ export default function Header({
         );
     }
 
-    // For authenticated users, only render the buttons once profileLoading is false.
+    // Authenticated header: show interactive buttons only when loading is done.
     return (
         <motion.header
             initial={{ opacity: 0, y: -20 }}
@@ -88,7 +90,7 @@ export default function Header({
         >
             {logoSection}
             <div className="relative flex items-center gap-4">
-                { !profileLoading && onOpenSubscriptionModal && (
+                {(!profileLoading && onOpenSubscriptionModal) && (
                     <button
                         onClick={onOpenSubscriptionModal}
                         className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150"
