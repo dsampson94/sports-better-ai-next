@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import Header from './components/Header';
 
 const spaceGrotesk = Space_Grotesk({
     variable: '--font-space-grotesk',
@@ -29,6 +30,7 @@ export default function RootLayout({
         <body
             className={ `${ spaceGrotesk.variable } ${ ibmPlexMono.variable } antialiased bg-gray-900 text-white` }
         >
+        <Header isAuthenticated={false} profileLoading={false} />
         { children }
         <Analytics/>
         <SpeedInsights/>

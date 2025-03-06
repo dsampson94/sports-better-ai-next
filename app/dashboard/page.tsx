@@ -4,7 +4,6 @@ import React, { FormEvent, useEffect, useState } from 'react';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { logout } from '../lib/auth';
 import SubscriptionModal from './SubscriptionModal';
 
 interface UserProfile {
@@ -28,7 +27,6 @@ export default function DashboardPage() {
         aiCallAllowance: 0
     });
     const [profileLoading, setProfileLoading] = useState(true);
-    const [dropdownOpen, setDropdownOpen] = useState(false);
     const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
     const { finalResult, loading, error, analyze } = useAnalysis();
@@ -66,60 +64,60 @@ export default function DashboardPage() {
         e.preventDefault();
         setErrorMsg('');
 
+        if (!isDeltaAlpha) {
+            setErrorMsg('Under Construction, come back soon!');
+            return;
+        }
+
         const { freePredictionCount, aiCallAllowance, balance } = userProfile;
         const costPerCall = 0.5;
 
-        let updateData: Partial<UserProfile> = {};
-
-        // ✅ Use free calls first
         if (freePredictionCount > 0) {
-            updateData = {
-                freePredictionCount: freePredictionCount - 1,
-                aiCallAllowance: aiCallAllowance - 1, // ✅ Ensure AI calls also decrement
-            };
-        }
-        // ✅ Then use AI call allowance
-        else if (aiCallAllowance > 0) {
-            updateData = { aiCallAllowance: aiCallAllowance - 1 };
-        }
-        // ✅ Then use balance
-        else if (balance >= costPerCall) {
-            updateData = { balance: balance - costPerCall };
-        }
-        // ❌ If all exhausted, show error
-        else {
+            // Deduct a free call
+            setUserProfile(prev => ({
+                ...prev,
+                freePredictionCount: prev.freePredictionCount - 1
+            }));
+
+            await fetch('/api/user/update-calls', { // Ensure API updates backend
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ freePredictionCount: freePredictionCount - 1 }),
+            });
+
+        } else if (aiCallAllowance > 0) {
+            // Deduct an AI call
+            setUserProfile(prev => ({
+                ...prev,
+                aiCallAllowance: Math.max(0, prev.aiCallAllowance - 1)
+            }));
+
+            await fetch('/api/user/update-calls', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ aiCallAllowance: aiCallAllowance - 1 }),
+            });
+
+        } else if (balance >= costPerCall) {
+            // Deduct from balance
+            setUserProfile(prev => ({
+                ...prev,
+                balance: Math.max(0, prev.balance - costPerCall)
+            }));
+
+            await fetch('/api/user/update-calls', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ balance: balance - costPerCall }),
+            });
+
+        } else {
             setErrorMsg('You have used all AI calls and do not have enough balance. Please add credits.');
             return;
         }
 
-        // ✅ Update user data in DB to persist changes
-        await updateUserCalls(updateData);
-
-        // ✅ Proceed with analysis
         await analyze(query);
     }
-
-// ✅ Function to Update the Database
-    async function updateUserCalls(updatedFields: Partial<UserProfile>) {
-        try {
-            const res = await fetch('/api/user/update-calls', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: userProfile.email,
-                    ...updatedFields,
-                }),
-            });
-
-            if (!res.ok) throw new Error('Failed to update user');
-
-            const updatedUser = await res.json();
-            setUserProfile(prev => ({ ...prev, ...updatedUser }));
-        } catch (error) {
-            console.error('Error updating user:', error);
-        }
-    }
-
 
     // "Get Best Bets" button handler
     async function handleBestBets(e: FormEvent) {
@@ -133,104 +131,8 @@ export default function DashboardPage() {
         await analyze('Get best bets');
     }
 
-    // Toggle user dropdown
-    const toggleDropdown = () => setDropdownOpen((prev) => !prev);
-
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col font-sans">
-            {/* HEADER */ }
-            <motion.header
-                initial={ { opacity: 0, y: -20 } }
-                animate={ { opacity: 1, y: 0 } }
-                transition={ { duration: 0.5 } }
-                className="bg-gray-800 p-2 flex justify-between items-center"
-            >
-                {/* Left: Logo and Title (hidden on mobile) */ }
-                <div className="flex items-center space-x-3">
-                    <img
-                        src="/logos/logo-brain.png"
-                        alt="SportsBetter AI Logo"
-                        className="h-16 w-auto sm:h-[110px]"
-                    />
-                    <h1 className="hidden lg:block text-xl font-bold">SportsBetter AI 🏆</h1>
-                </div>
-                {/* Right: User Icon Dropdown */ }
-                <div className="relative">
-                    { !profileLoading && (
-                        <button
-                            onClick={ () => setShowSubscriptionModal(true) }
-                            className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150"
-                        >
-                            Get Tokens
-                        </button>
-                    ) }
-                    <button
-                        onClick={ toggleDropdown }
-                        className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700
-                       hover:bg-gray-600 focus:outline-none transition"
-                    >
-                        {/* Simple user icon (replace with an avatar if you prefer) */ }
-                        <svg
-                            className="w-5 h-5 text-gray-300"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={ 2 }
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                        </svg>
-                    </button>
-                    {/* Dropdown Panel */ }
-                    { dropdownOpen && !profileLoading && (
-                        <motion.div
-                            initial={ { opacity: 0, y: -8 } }
-                            animate={ { opacity: 1, y: 0 } }
-                            exit={ { opacity: 0, y: -8 } }
-                            className="absolute right-0 mt-2 w-44 bg-gray-800 border border-gray-700 rounded shadow-lg z-10"
-                        >
-                            <div className="px-4 py-3">
-                                <p className="text-sm text-gray-400 font-semibold">
-                                    Hello, { userProfile.username || userProfile.email }
-                                </p>
-                                <p className="text-sm text-gray-300 mt-1">
-                                    <strong>Balance:</strong> ${ userProfile.balance.toFixed(2) }
-                                </p>
-                                <p className="text-sm text-gray-300">
-                                    <strong>AI Calls Remaining:</strong> { userProfile.aiCallAllowance }
-                                </p>
-                            </div>
-                            <div className="border-t border-gray-700">
-                                <button
-                                    onClick={ () => {
-                                        setDropdownOpen(false);
-                                        router.push('/add-credit');
-                                    } }
-                                    className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
-                                >
-                                    Add Credit
-                                </button>
-                                { isDeltaAlpha &&
-                                    <button onClick={ () => router.push('/dashboard/admin') }
-                                            className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition">
-                                        Admin Dashboard
-                                    </button>
-                                }
-                                <button
-                                    onClick={ logout }
-                                    className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-sm text-gray-300 transition"
-                                >
-                                    Logout
-                                </button>
-                            </div>
-                        </motion.div>
-                    ) }
-                </div>
-            </motion.header>
-
             {/* MAIN CONTENT */ }
             <main className="flex-1 py-4 px-4 sm:px-4">
                 <motion.div
