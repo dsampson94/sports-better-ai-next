@@ -33,7 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         refreshUserProfile();
-    }, [userProfile]);
+    }, []);
 
     const openSubscriptionModal = () => setShowSubscriptionModal(true);
     const closeSubscriptionModal = () => {
