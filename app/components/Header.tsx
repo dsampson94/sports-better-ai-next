@@ -34,7 +34,6 @@ export default function Header({
 
     const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-    // Logo and title are always rendered
     const logoSection = (
         <div
             onClick={() => router.push(isAuthenticated ? "/dashboard" : "/")}
@@ -52,7 +51,22 @@ export default function Header({
         </div>
     );
 
-    // Non-authenticated header: show logo and auth links
+    // If still loading, render logo with a reserved space for right side buttons
+    if (profileLoading) {
+        return (
+            <motion.header
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="fixed top-0 left-0 right-0 bg-gray-800 border-b-2 border-[#545b63] p-4 flex justify-between items-center shadow-lg z-50"
+            >
+                {logoSection}
+                <div className="w-40" /> {/* Reserve space on the right */}
+            </motion.header>
+        );
+    }
+
+    // When not authenticated, render login/sign up links
     if (!isAuthenticated) {
         return (
             <motion.header
@@ -80,7 +94,7 @@ export default function Header({
         );
     }
 
-    // Authenticated header: show interactive buttons only when loading is done.
+    // Authenticated header: render interactive buttons once loaded
     return (
         <motion.header
             initial={{ opacity: 0, y: -20 }}
@@ -90,7 +104,7 @@ export default function Header({
         >
             {logoSection}
             <div className="relative flex items-center gap-4">
-                {(!profileLoading && onOpenSubscriptionModal) && (
+                {onOpenSubscriptionModal && (
                     <button
                         onClick={onOpenSubscriptionModal}
                         className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150"
@@ -98,27 +112,25 @@ export default function Header({
                         Get Tokens
                     </button>
                 )}
-                { !profileLoading && (
-                    <button
-                        onClick={toggleDropdown}
-                        className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition"
+                <button
+                    onClick={toggleDropdown}
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition"
+                >
+                    <svg
+                        className="w-5 h-5 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        viewBox="0 0 24 24"
                     >
-                        <svg
-                            className="w-5 h-5 text-gray-300"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                        </svg>
-                    </button>
-                )}
-                { !profileLoading && dropdownOpen && (
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5.121 17.804A4 4 0 018 16h8a4 4 0 012.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                    </svg>
+                </button>
+                {dropdownOpen && (
                     <motion.div
                         initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
