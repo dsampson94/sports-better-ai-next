@@ -19,27 +19,31 @@ export async function GET(req: NextRequest, { params }) {
 }
 
 // PATCH /api/user/[id]
-export async function PATCH(req: NextRequest, { params }) {
+export async function PATCH(req: NextRequest) {
     try {
         await connectToDatabase();
-        const { id } = params as { id: string };
         const body = await req.json();
-        const user = await User.findById(id);
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        const { email, freePredictionCount, aiCallAllowance } = body;
+
+        if (!email) {
+            return NextResponse.json({ error: "Email is required" }, { status: 400 });
         }
-        // Only allow specific fields to be updated
-        const allowedUpdates = ['username', 'balance', 'aiCallAllowance', 'freePredictionCount'];
-        Object.keys(body).forEach((key) => {
-            if (allowedUpdates.includes(key)) {
-                (user as any)[key] = body[key];
-            }
-        });
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Update only allowed fields
+        user.freePredictionCount = freePredictionCount ?? user.freePredictionCount;
+        user.aiCallAllowance = aiCallAllowance ?? user.aiCallAllowance;
+
         await user.save();
+
         return NextResponse.json(user, { status: 200 });
     } catch (error) {
-        console.error('PATCH /api/user/[id] error:', error);
-        return NextResponse.json({ error: 'Error updating user' }, { status: 400 });
+        console.error("PATCH /api/user error:", error);
+        return NextResponse.json({ error: "Error updating user" }, { status: 500 });
     }
 }
 

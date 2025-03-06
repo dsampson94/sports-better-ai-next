@@ -61,55 +61,48 @@ export default function DashboardPage() {
 
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
-        setErrorMsg('');
+        setErrorMsg("");
 
-        if (!isDeltaAlpha) {
-            setErrorMsg('Under Construction, come back soon!');
+        if (!userProfile.email) {
+            setErrorMsg("Error: No email found.");
             return;
         }
 
-        const { freePredictionCount, aiCallAllowance, balance } = userProfile;
-        const costPerCall = 0.5;
+        let updatedUserData = { ...userProfile };
 
-        if (freePredictionCount > 0) {
-            // Deduct a free call locally
-            setUserProfile(prev => ({
-                ...prev,
-                freePredictionCount: prev.freePredictionCount - 1
-            }));
-
-            await fetch('/api/user/update-calls', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ freePredictionCount: freePredictionCount - 1 }),
-            });
-        } else if (aiCallAllowance > 0) {
-            // Deduct an AI call locally
-            setUserProfile(prev => ({
-                ...prev,
-                aiCallAllowance: Math.max(0, prev.aiCallAllowance - 1)
-            }));
-
-            await fetch('/api/user/update-calls', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ aiCallAllowance: aiCallAllowance - 1 }),
-            });
-        } else if (balance >= costPerCall) {
-            // Deduct from balance locally
-            setUserProfile(prev => ({
-                ...prev,
-                balance: Math.max(0, prev.balance - costPerCall)
-            }));
-
-            await fetch('/api/user/update-calls', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ balance: balance - costPerCall }),
-            });
+        if (userProfile.freePredictionCount > 0) {
+            updatedUserData.freePredictionCount -= 1;
+        } else if (userProfile.aiCallAllowance > 0) {
+            updatedUserData.aiCallAllowance -= 1;
         } else {
-            setErrorMsg('You have used all AI calls and do not have enough balance. Please add credits.');
+            setErrorMsg("You have used all AI calls. Please purchase more tokens.");
             return;
+        }
+
+        // Optimistically update UI
+        setUserProfile(updatedUserData);
+
+        try {
+            const response = await fetch(`/api/user`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: userProfile.email,
+                    freePredictionCount: updatedUserData.freePredictionCount,
+                    aiCallAllowance: updatedUserData.aiCallAllowance
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to update user profile");
+            }
+
+            const updatedData = await response.json();
+            setUserProfile(updatedData);
+        } catch (error) {
+            console.error("Error updating user profile:", error);
+            setErrorMsg("Something went wrong. Please try again.");
+            setUserProfile(userProfile);
         }
 
         await analyze(query);
@@ -241,7 +234,7 @@ interface PredictionBlockProps {
 }
 
 const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(true);
     const isIntroBlock = prediction.gameTitle.startsWith('🔮');
 
     return (

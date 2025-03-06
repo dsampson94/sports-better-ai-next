@@ -37,7 +37,7 @@ export default function Header({
 
     useEffect(() => {
         refreshUserProfile();
-    }, []);
+    }, [userProfile]);
 
     const toggleDropdown = () => {
         setDropdownOpen((prev) => !prev);
@@ -148,13 +148,10 @@ export default function Header({
                     >
                         <div className="px-4 py-3">
                             <p className="text-sm text-gray-300">
-                                <strong>Balance:</strong> ${userProfile?.balance.toFixed(2)}
+                                <strong>Available Calls:</strong> {userProfile?.aiCallAllowance}
                             </p>
                             <p className="text-sm text-gray-300">
                                 <strong>Free Calls:</strong> {userProfile?.freePredictionCount}
-                            </p>
-                            <p className="text-sm text-gray-300">
-                                <strong>Available Calls:</strong> {userProfile?.aiCallAllowance}
                             </p>
                         </div>
                         <div className="border-t border-gray-700">
