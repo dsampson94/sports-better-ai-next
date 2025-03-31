@@ -32,7 +32,7 @@ export default function DashboardPage() {
     const [selectedPlan, setSelectedPlan] = useState<keyof typeof plans | null>(null);
 
     const { finalResult, loading, error, analyze } = useAnalysis();
-
+    console.log(finalResult);
     useEffect(() => {
         async function fetchUserProfile() {
             try {
@@ -189,9 +189,9 @@ export default function DashboardPage() {
                                 type="submit"
                                 disabled={ isButtonDisabled }
                                 className={`
-                  px-4 py-2 rounded-lg font-semibold text-sm transition 
-                  ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
-                `}
+                                          px-4 py-2 rounded-lg font-semibold text-sm transition 
+                                          ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
+                                        `}
                             >
                                 { isButtonDisabled ? 'Get More Tokens' : (loading ? 'Analyzing...' : 'Get Predictions') }
                             </motion.button>

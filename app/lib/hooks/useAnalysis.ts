@@ -121,12 +121,14 @@ export function useAnalysis() {
                 return match ? match[1].trim() : '';
             }
 
-            const predictions: GamePrediction[] = gameBlocks.map((block) => {
-                const lines = block.split('\n');
-                const firstLine = lines[0]?.trim() || '';
-                const gameTitle = firstLine.replace(/^🏆 Game Title:\s*/, '').trim();
+            const predictions: GamePrediction[] = gameBlocks.map((block: string) => {
+                // Use a regex with the multiline flag to capture only the first line after "🏆 Game Title:"
+                const gameTitleMatch = block.match(/^🏆 Game Title:\s*(.*?)\s*(?=\n|$)/m);
+                const gameTitle = gameTitleMatch ? gameTitleMatch[1].trim() : '';
 
+                // Extract competition from any line starting with "Competition:"
                 let competition = '';
+                const lines = block.split('\n');
                 for (const line of lines) {
                     if (line.startsWith('Competition:')) {
                         competition = line.replace('Competition:', '').trim();
@@ -134,9 +136,11 @@ export function useAnalysis() {
                     }
                 }
 
+                // Find the section that contains prediction details
                 const predictionIndex = block.indexOf('🏆 Final Prediction & Betting Insights:');
                 const bulletSection = predictionIndex >= 0 ? block.slice(predictionIndex) : block;
 
+                // Use your extractBetween helper to capture each field
                 const winProbability = extractBetween(bulletSection, '- Win Probability', '- Best Bet:');
                 const bestBet = extractBetween(bulletSection, '- Best Bet:', '- Key Stats & Trends:');
                 const fixtureDetails = extractBetween(bulletSection, '- 📅 Fixture Details:', '- 📊 Recent Form:');
