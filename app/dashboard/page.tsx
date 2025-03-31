@@ -287,7 +287,7 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                 <p className="text-sm text-gray-400 mb-3">Competition: { prediction.competition }</p>
             ) }
             { isIntroBlock ? (
-                <p className="text-gray-300 whitespace-pre-wrap">{ prediction.fullText }</p>
+                <p className="text-gray-300 whitespace-pre-wrap">{ prediction.gameTitle }</p>
             ) : (
                 <>
                     <button
