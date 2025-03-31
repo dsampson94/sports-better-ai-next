@@ -284,7 +284,7 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
         >
             <h2 className="text-2xl font-bold text-blue-300 mb-1">{ prediction.gameTitle }</h2>
             { prediction.competition && (
-                <p className="text-sm text-gray-400 mb-3">Competition: { prediction.competition }</p>
+                <p className="text-sm text-gray-400 mb-3"> Competition: { prediction.competition }</p>
             ) }
             { isIntroBlock ? (
                 <p className="text-gray-300 whitespace-pre-wrap">{ prediction.gameTitle }</p>
