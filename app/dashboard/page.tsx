@@ -166,9 +166,8 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
         >
             <h2 className="text-2xl font-bold text-blue-300 mb-1">
                 {(() => {
-                    const regex = /🏆 Game Title:\s*(.*?)\s*✅/;
-                    const match = prediction.gameTitle.match(regex);
-                    return match ? match[1] : prediction.gameTitle;
+                    const match = prediction.gameTitle.match(/^(.*?)\s*✅/);
+                    return match ? match[1].trim() : prediction.gameTitle;
                 })()}
             </h2>
 
