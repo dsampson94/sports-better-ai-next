@@ -1,3 +1,4 @@
+// app/components/AppLayout.tsx
 "use client";
 import React, { useState } from "react";
 import Header from "./Header";
@@ -23,6 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     const handlePaymentSuccess = async () => {
         console.log("Payment successful!");
+        // Refresh the shared profile state on successful payment
         await refreshUserProfile();
         setSelectedPlan(null);
         setShowSubscriptionModal(false);

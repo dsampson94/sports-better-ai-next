@@ -1,3 +1,4 @@
+// app/context/AuthContext.tsx
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -9,7 +10,6 @@ export interface UserProfile {
     balance: number;
     freePredictionCount: number;
     aiCallAllowance: number;
-    // Add any additional fields as needed
 }
 
 interface AuthContextProps {
