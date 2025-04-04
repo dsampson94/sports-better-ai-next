@@ -4,6 +4,7 @@ import React, { FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import useAuth from '../lib/hooks/useAuth';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
+import PredictionResults from '../components/PredictionResults';
 
 export default function DashboardPage() {
     const { userProfile } = useAuth();
@@ -122,9 +123,14 @@ export default function DashboardPage() {
                     {/* Predictions */ }
                     { finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
-                            { finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
-                                <PredictionBlock key={ idx } prediction={ prediction }/>
-                            )) }
+                            {finalResult && (
+                                <PredictionResults
+                                    loading={loading}
+                                    error={error}
+                                    aggregatedIntro={finalResult.aggregatedIntro}
+                                    predictions={finalResult.predictions as GamePrediction[]}
+                                />
+                            )}
 
                             { finalResult.predictions[0].citations && finalResult.predictions[0].citations.length > 0 && (
                                 <motion.div whileHover={ { scale: 1.02 } }
