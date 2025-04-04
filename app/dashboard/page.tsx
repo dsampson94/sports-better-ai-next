@@ -154,7 +154,7 @@ interface PredictionBlockProps {
 }
 
 const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
     const isIntroBlock = prediction.gameTitle.startsWith('🔮');
 
     return (
