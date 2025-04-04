@@ -4,7 +4,6 @@ import React, { FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import useAuth from '../lib/hooks/useAuth';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
-import PredictionResults from '../components/PredictionResults';
 
 export default function DashboardPage() {
     const { userProfile } = useAuth();
@@ -12,10 +11,13 @@ export default function DashboardPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const { finalResult, loading, error, analyze } = useAnalysis();
 
+    // Determine if the user has a special admin username
     const isDeltaAlpha = userProfile?.username === 'deltaalphavids';
-    const isButtonDisabled =
-        (userProfile?.freePredictionCount ?? 0) <= 0 &&
-        (userProfile?.aiCallAllowance ?? 0) <= 0;
+
+    // Calculate total tokens available (free + purchased)
+    const totalTokens =
+        (userProfile?.freePredictionCount ?? 0) + (userProfile?.aiCallAllowance ?? 0);
+    const isButtonDisabled = totalTokens <= 0;
 
     async function handleAnalyze(e: FormEvent) {
         e.preventDefault();
@@ -25,11 +27,15 @@ export default function DashboardPage() {
             setErrorMsg('Error: User ID not found.');
             return;
         }
+        if (isButtonDisabled) {
+            setErrorMsg('No tokens available. Please purchase more.');
+            return;
+        }
 
         try {
             await analyze(query);
-        } catch (error) {
-            console.error('Error analyzing prediction:', error);
+        } catch (err) {
+            console.error('Error analyzing prediction:', err);
             setErrorMsg('Something went wrong. Please try again.');
         }
     }
@@ -42,6 +48,10 @@ export default function DashboardPage() {
             setErrorMsg('Under Construction, come back soon!');
             return;
         }
+        if (isButtonDisabled) {
+            setErrorMsg('No tokens available. Please purchase more.');
+            return;
+        }
         await analyze('Get best bets');
     }
 
@@ -49,106 +59,109 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-gray-900 text-white flex pt-24 flex-col font-sans">
             <main className="flex-1 px-4">
                 <motion.div
-                    initial={ { opacity: 0, y: 20 } }
-                    animate={ { opacity: 1, y: 0 } }
-                    transition={ { duration: 0.5, delay: 0.3 } }
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
                     className="w-full max-w-screen-xl mx-auto"
                 >
-                    { errorMsg && (
+                    {errorMsg && (
                         <motion.div
-                            initial={ { scale: 0.9, opacity: 0 } }
-                            animate={ { scale: 1, opacity: 1 } }
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
                             className="bg-red-700 p-3 rounded mb-4 text-red-100 text-center"
                         >
-                            { errorMsg }
+                            {errorMsg}
                         </motion.div>
-                    ) }
+                    )}
 
-                    {/* Form */ }
-                    <form onSubmit={ handleAnalyze } className="flex flex-col space-y-3 w-full mb-6">
+                    {/* Token Display */}
+                    <div className="mb-4 text-center text-sm text-gray-300">
+                        <p>
+                            <strong>Total Tokens Available:</strong> {totalTokens}
+                        </p>
+                    </div>
+
+                    {/* Query Form */}
+                    <form onSubmit={handleAnalyze} className="flex flex-col space-y-3 w-full mb-6">
                         <motion.textarea
-                            initial={ { opacity: 0, y: 10 } }
-                            animate={ { opacity: 1, y: 0 } }
-                            transition={ { duration: 0.3 } }
-                            className="p-4 rounded-lg bg-gray-800 border border-gray-600
-                             focus:outline-none focus:ring-2 focus:ring-green-500
-                             focus:border-transparent text-sm transition-colors
-                             ease-in-out duration-150 w-full"
-                            rows={ 1 }
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm transition-colors ease-in-out duration-150 w-full"
+                            rows={1}
                             placeholder='e.g. "Who will likely win the next big rugby match?"'
-                            value={ query }
-                            onChange={ (e) => setQuery(e.target.value) }
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
                         />
 
-                        {/* Buttons */ }
+                        {/* Buttons */}
                         <div className="flex flex-row space-x-2">
                             <motion.button
                                 type="submit"
-                                disabled={ isButtonDisabled }
-                                className={ `
-                                    px-4 py-2 rounded-lg font-semibold text-sm transition 
-                                    ${ isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white' }
-                                ` }
+                                disabled={isButtonDisabled || loading}
+                                className={`
+                  px-4 py-2 rounded-lg font-semibold text-sm transition 
+                  ${isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white'}
+                `}
                             >
-                                { isButtonDisabled ? 'Get More Tokens' : loading ? 'Analyzing...' : 'Get Predictions' }
+                                {isButtonDisabled ? 'Get More Tokens' : loading ? 'Analyzing...' : 'Get Predictions'}
                             </motion.button>
 
                             <motion.button
-                                whileHover={ { scale: 1.02 } }
-                                whileTap={ { scale: 0.95 } }
-                                onClick={ handleBestBets }
-                                disabled={ loading }
-                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2
-                                rounded-lg text-white font-semibold text-sm
-                                transition-colors ease-in-out duration-150 w-auto"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleBestBets}
+                                disabled={loading}
+                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150 w-auto"
                             >
                                 Get Best Bets
                             </motion.button>
                         </div>
                     </form>
 
-                    {/* Results */ }
-                    { finalResult && finalResult.aggregatedIntro && (
+                    {/* Prediction Results */}
+                    {finalResult && finalResult.aggregatedIntro && (
                         <motion.div
-                            initial={ { opacity: 0, y: 10 } }
-                            animate={ { opacity: 1, y: 0 } }
-                            transition={ { duration: 0.5 } }
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5 }}
                             className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md mb-8"
                         >
                             <h3 className="text-xl font-bold text-blue-300 mb-2">Overview</h3>
-                            <p className="text-gray-300 whitespace-pre-wrap">{ finalResult.aggregatedIntro }</p>
+                            <p className="text-gray-300 whitespace-pre-wrap">
+                                {finalResult.aggregatedIntro}
+                            </p>
                         </motion.div>
-                    ) }
+                    )}
 
-                    {/* Predictions */ }
-                    { finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
+                    {finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
-                            {finalResult && (
-                                <PredictionResults
-                                    loading={loading}
-                                    error={error}
-                                    aggregatedIntro={finalResult.aggregatedIntro}
-                                    predictions={finalResult.predictions as GamePrediction[]}
-                                />
-                            )}
+                            {finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
+                                <PredictionBlock key={idx} prediction={prediction} />
+                            ))}
 
-                            { finalResult.predictions[0].citations && finalResult.predictions[0].citations.length > 0 && (
-                                <motion.div whileHover={ { scale: 1.02 } }
-                                            className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md">
-                                    <h3 className="text-lg font-bold mb-2 text-purple-400">🔗 Citations (All Games)</h3>
-                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                                        { finalResult.predictions[0].citations.map((cite, cIdx) => (
-                                            <li key={ cIdx }>{ cite }</li>
-                                        )) }
-                                    </ul>
-                                </motion.div>
-                            ) }
+                            {finalResult.predictions[0].citations &&
+                                finalResult.predictions[0].citations.length > 0 && (
+                                    <motion.div
+                                        whileHover={{ scale: 1.02 }}
+                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
+                                    >
+                                        <h3 className="text-lg font-bold mb-2 text-purple-400">
+                                            🔗 Citations (All Games)
+                                        </h3>
+                                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                                            {finalResult.predictions[0].citations.map((cite, cIdx) => (
+                                                <li key={cIdx}>{cite}</li>
+                                            ))}
+                                        </ul>
+                                    </motion.div>
+                                )}
                         </div>
-                    ) }
+                    )}
 
-                    { error && (
-                        <motion.div className="mt-4 text-red-400 text-center">{ error }</motion.div>
-                    ) }
+                    {error && (
+                        <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>
+                    )}
                 </motion.div>
             </main>
         </div>
@@ -165,45 +178,48 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
 
     return (
         <motion.div
-            initial={ { opacity: 0, scale: 0.95 } }
-            animate={ { opacity: 1, scale: 1 } }
-            transition={ { duration: 0.5 } }
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
             className="bg-gray-800 p-6 rounded shadow-lg w-full"
         >
+            {/* Extract only the text before the "✅" marker */}
             <h2 className="text-2xl font-bold text-blue-300 mb-1">
                 {(() => {
-                    const match = prediction.gameTitle.match(/^(.*?)\s*✅/);
+                    const regex = /^(.*?)\s*✅/;
+                    const match = prediction.gameTitle.match(regex);
                     return match ? match[1].trim() : prediction.gameTitle;
                 })()}
             </h2>
-
-            { prediction.competition && (
-                <p className="text-sm text-gray-400 mb-3">Competition: { prediction.competition }</p>
-            ) }
-            { isIntroBlock ? (
-                <p className="text-gray-300 whitespace-pre-wrap">{ prediction.fullText }</p>
+            {prediction.competition && (
+                <p className="text-sm text-gray-400 mb-3">Competition: {prediction.competition}</p>
+            )}
+            {isIntroBlock ? (
+                <p className="text-gray-300 whitespace-pre-wrap">{prediction.fullText}</p>
             ) : (
                 <>
                     <button
                         className="mb-4 bg-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-600 transition"
-                        onClick={ () => setCollapsed(!collapsed) }
+                        onClick={() => setCollapsed(!collapsed)}
                     >
-                        { collapsed ? 'Show Details' : 'Hide Details' }
+                        {collapsed ? 'Show Details' : 'Hide Details'}
                     </button>
-                    { !collapsed && (
+                    {!collapsed && (
                         <>
-                            <motion.div whileHover={ { scale: 1.02 } }
-                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4">
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
+                            >
                                 <h3 className="text-xl font-bold mb-2 text-green-400">✅ Final Prediction</h3>
                                 <p className="text-gray-300">
-                                    <strong>Win Probability:</strong> { prediction.winProbability }
+                                    <strong>Win Probability:</strong> {prediction.winProbability}
                                 </p>
                                 <p className="text-gray-300">
-                                    <strong>Best Bet:</strong> { prediction.bestBet }
+                                    <strong>Best Bet:</strong> {prediction.bestBet}
                                 </p>
                             </motion.div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                { [
+                                {[
                                     { title: '📅 Fixture Details', data: prediction.fixtureDetails },
                                     { title: '📊 Recent Form', data: prediction.recentForm },
                                     { title: '🔄 Head-to-Head', data: prediction.headToHead },
@@ -215,22 +231,29 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                                     { title: '📝 Characterization', data: prediction.characterization },
                                     { title: '🎯 Overall Recommendation', data: prediction.overallRecommendation },
                                 ].map((item, i) => (
-                                    <motion.div key={ i } whileHover={ { scale: 1.03 } }
-                                                className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md">
-                                        <h4 className="text-md font-semibold text-yellow-400">{ item.title }</h4>
-                                        <p className="text-gray-300">{ item.data || '' }</p>
+                                    <motion.div
+                                        key={i}
+                                        whileHover={{ scale: 1.03 }}
+                                        className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
+                                    >
+                                        <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
+                                        <p className="text-gray-300">{item.data || ''}</p>
                                     </motion.div>
-                                )) }
+                                ))}
                             </div>
-                            <motion.div whileHover={ { scale: 1.02 } }
-                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4">
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
+                            >
                                 <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
-                                <pre className="text-sm whitespace-pre-wrap text-gray-300">{ prediction.fullText }</pre>
+                                <pre className="text-sm whitespace-pre-wrap text-gray-300">
+                  {prediction.fullText}
+                </pre>
                             </motion.div>
                         </>
-                    ) }
+                    )}
                 </>
-            ) }
+            )}
         </motion.div>
     );
 };
