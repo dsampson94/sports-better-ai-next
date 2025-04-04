@@ -164,7 +164,7 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
             transition={ { duration: 0.5 } }
             className="bg-gray-800 p-6 rounded shadow-lg w-full"
         >
-            <h2 className="text-2xl font-bold text-blue-300 mb-1">{ prediction.gameTitle }</h2>
+            {/*<h2 className="text-2xl font-bold text-blue-300 mb-1">{ prediction.gameTitle }</h2>*/}
             { prediction.competition && (
                 <p className="text-sm text-gray-400 mb-3">Competition: { prediction.competition }</p>
             ) }

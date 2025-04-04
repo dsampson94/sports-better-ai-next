@@ -151,43 +151,6 @@ export default function Home() {
               </div>
             </div>
           </section>
-
-          {/* Testimonials Section */}
-          <section className="py-16 bg-gray-800">
-            <div className="container mx-auto px-6">
-              <motion.h3
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className="text-3xl font-bold text-center mb-8"
-              >
-                Success Stories
-              </motion.h3>
-              <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-8"
-              >
-                <div className="bg-gray-700 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                  <p className="text-gray-300 mb-4 italic">
-                    “I’ve tried countless betting tools, but nothing compares to
-                    SportsBetter AI. In just a few weeks, my winning rate soared by over
-                    30%. The AI critiques are game-changing!”
-                  </p>
-                  <h4 className="font-semibold text-green-400">— Alex M.</h4>
-                </div>
-                <div className="bg-gray-700 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                  <p className="text-gray-300 mb-4 italic">
-                    “As someone new to sports betting, the step-by-step analysis and real
-                    insights helped me learn fast and win more. Highly recommend
-                    SportsBetter AI for anyone looking to up their game.”
-                  </p>
-                  <h4 className="font-semibold text-green-400">— Jamie L.</h4>
-                </div>
-              </motion.div>
-            </div>
-          </section>
         </main>
       </div>
   );
