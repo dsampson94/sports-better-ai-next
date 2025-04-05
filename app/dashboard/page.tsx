@@ -4,6 +4,14 @@ import React, { FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import useAuth from '../lib/hooks/useAuth';
 import { GamePrediction, useAnalysis } from '../lib/hooks/useAnalysis';
+import PredictionResults from '../components/PredictionResults';
+
+// Helper to extract a date from fixtureDetails – adjust the regex if needed.
+const extractDate = (fixtureDetails: string): Date | null => {
+    const regex = /(\w+\s+\d{1,2},\s+\d{4})/;
+    const match = fixtureDetails.match(regex);
+    return match && match[1] ? new Date(match[1]) : null;
+};
 
 export default function DashboardPage() {
     const { userProfile } = useAuth();
@@ -11,10 +19,10 @@ export default function DashboardPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const { finalResult, loading, error, analyze } = useAnalysis();
 
-    // Determine if the user has a special admin username
+    // Determine if the user has a special admin username.
     const isDeltaAlpha = userProfile?.username === 'deltaalphavids';
 
-    // Calculate total tokens available (free + purchased)
+    // Calculate total tokens available (free + purchased).
     const totalTokens =
         (userProfile?.freePredictionCount ?? 0) + (userProfile?.aiCallAllowance ?? 0);
     const isButtonDisabled = totalTokens <= 0;
@@ -55,6 +63,13 @@ export default function DashboardPage() {
         await analyze('Get best bets');
     }
 
+    // Filter predictions to only include upcoming games (future fixture date).
+    const filteredPredictions = finalResult?.predictions.filter(prediction => {
+        const gameDate = extractDate(prediction.fixtureDetails);
+        // If date exists, include only if it's in the future; if no date, include by default.
+        return gameDate ? gameDate.getTime() > Date.now() : true;
+    }) || [];
+
     return (
         <div className="min-h-screen bg-gray-900 text-white flex pt-24 flex-col font-sans">
             <main className="flex-1 px-4">
@@ -81,7 +96,28 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
-                    {/* Query Form */}
+                    {/* Fixed Prompt Buttons */}
+                    <div className="flex flex-wrap gap-4 mb-6">
+                        <button
+                            className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-semibold text-sm"
+                            onClick={() => {
+                                setQuery('Upcoming games this week');
+                                handleAnalyze(new Event('submit') as unknown as FormEvent);
+                            }}
+                            disabled={isButtonDisabled || loading}
+                        >
+                            Upcoming Games This Week
+                        </button>
+                        <button
+                            className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded font-semibold text-sm"
+                            onClick={handleBestBets}
+                            disabled={loading}
+                        >
+                            Get Best Bets
+                        </button>
+                    </div>
+
+                    {/* Search Form for Custom Query */}
                     <form onSubmit={handleAnalyze} className="flex flex-col space-y-3 w-full mb-6">
                         <motion.textarea
                             initial={{ opacity: 0, y: 10 }}
@@ -89,171 +125,34 @@ export default function DashboardPage() {
                             transition={{ duration: 0.3 }}
                             className="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm transition-colors ease-in-out duration-150 w-full"
                             rows={1}
-                            placeholder='e.g. "Who will likely win the next big rugby match?"'
+                            placeholder='Search by team, competition or date (e.g., "Chiefs vs Reds" or "Super Rugby")'
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />
-
-                        {/* Buttons */}
-                        <div className="flex flex-row space-x-2">
-                            <motion.button
-                                type="submit"
-                                disabled={isButtonDisabled || loading}
-                                className={`
-                  px-4 py-2 rounded-lg font-semibold text-sm transition 
-                  ${isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white'}
-                `}
-                            >
-                                {isButtonDisabled ? 'Get More Tokens' : loading ? 'Analyzing...' : 'Get Predictions'}
-                            </motion.button>
-
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={handleBestBets}
-                                disabled={loading}
-                                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-white font-semibold text-sm transition-colors ease-in-out duration-150 w-auto"
-                            >
-                                Get Best Bets
-                            </motion.button>
-                        </div>
+                        <button
+                            type="submit"
+                            disabled={isButtonDisabled || loading}
+                            className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                                isButtonDisabled ? 'bg-gray-500 cursor-not-allowed text-gray-300' : 'bg-green-600 hover:bg-green-500 text-white'
+                            }`}
+                        >
+                            Get Predictions
+                        </button>
                     </form>
 
                     {/* Prediction Results */}
                     {finalResult && finalResult.aggregatedIntro && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-md mb-8"
-                        >
-                            <h3 className="text-xl font-bold text-blue-300 mb-2">Overview</h3>
-                            <p className="text-gray-300 whitespace-pre-wrap">
-                                {finalResult.aggregatedIntro}
-                            </p>
-                        </motion.div>
-                    )}
-
-                    {finalResult && finalResult.predictions && finalResult.predictions.length > 0 && (
                         <div className="space-y-8">
-                            {finalResult.predictions.map((prediction: GamePrediction, idx: number) => (
-                                <PredictionBlock key={idx} prediction={prediction} />
-                            ))}
-
-                            {finalResult.predictions[0].citations &&
-                                finalResult.predictions[0].citations.length > 0 && (
-                                    <motion.div
-                                        whileHover={{ scale: 1.02 }}
-                                        className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md"
-                                    >
-                                        <h3 className="text-lg font-bold mb-2 text-purple-400">
-                                            🔗 Citations (All Games)
-                                        </h3>
-                                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
-                                            {finalResult.predictions[0].citations.map((cite, cIdx) => (
-                                                <li key={cIdx}>{cite}</li>
-                                            ))}
-                                        </ul>
-                                    </motion.div>
-                                )}
+                            <PredictionResults
+                                loading={loading}
+                                error={error}
+                                aggregatedIntro={finalResult.aggregatedIntro}
+                                predictions={filteredPredictions}
+                            />
                         </div>
-                    )}
-
-                    {error && (
-                        <motion.div className="mt-4 text-red-400 text-center">{error}</motion.div>
                     )}
                 </motion.div>
             </main>
         </div>
     );
 }
-
-interface PredictionBlockProps {
-    prediction: GamePrediction;
-}
-
-const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
-    const [collapsed, setCollapsed] = useState(false);
-    const isIntroBlock = prediction.gameTitle.startsWith('🔮');
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="bg-gray-800 p-6 rounded shadow-lg w-full"
-        >
-            {/* Extract only the text before the "✅" marker */}
-            <h2 className="text-2xl font-bold text-blue-300 mb-1">
-                {(() => {
-                    const regex = /^(.*?)\s*✅/;
-                    const match = prediction.gameTitle.match(regex);
-                    return match ? match[1].trim() : prediction.gameTitle;
-                })()}
-            </h2>
-            {prediction.competition && (
-                <p className="text-sm text-gray-400 mb-3">Competition: {prediction.competition}</p>
-            )}
-            {isIntroBlock ? (
-                <p className="text-gray-300 whitespace-pre-wrap">{prediction.fullText}</p>
-            ) : (
-                <>
-                    <button
-                        className="mb-4 bg-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-600 transition"
-                        onClick={() => setCollapsed(!collapsed)}
-                    >
-                        {collapsed ? 'Show Details' : 'Hide Details'}
-                    </button>
-                    {!collapsed && (
-                        <>
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mb-4"
-                            >
-                                <h3 className="text-xl font-bold mb-2 text-green-400">✅ Final Prediction</h3>
-                                <p className="text-gray-300">
-                                    <strong>Win Probability:</strong> {prediction.winProbability}
-                                </p>
-                                <p className="text-gray-300">
-                                    <strong>Best Bet:</strong> {prediction.bestBet}
-                                </p>
-                            </motion.div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {[
-                                    { title: '📅 Fixture Details', data: prediction.fixtureDetails },
-                                    { title: '📊 Recent Form', data: prediction.recentForm },
-                                    { title: '🔄 Head-to-Head Record:', data: prediction.headToHead },
-                                    { title: '🚑 Injury Updates', data: prediction.injuryUpdates },
-                                    { title: '🌍 Home/Away Impact', data: prediction.homeAwayImpact },
-                                    { title: '🔥 Tactical Insights', data: prediction.tacticalInsights },
-                                    { title: '💰 Betting Market Movement', data: prediction.bettingMarketMovement },
-                                    { title: '💡 Expert Predictions & Trends', data: prediction.expertPredictions },
-                                    { title: '📝 Characterization', data: prediction.characterization },
-                                    { title: '🎯 Overall Recommendation', data: prediction.overallRecommendation },
-                                ].map((item, i) => (
-                                    <motion.div
-                                        key={i}
-                                        whileHover={{ scale: 1.03 }}
-                                        className="p-4 rounded-lg border border-gray-700 bg-gray-900 shadow-md"
-                                    >
-                                        <h4 className="text-md font-semibold text-yellow-400">{item.title}</h4>
-                                        <p className="text-gray-300">{item.data || ''}</p>
-                                    </motion.div>
-                                ))}
-                            </div>
-                            <motion.div
-                                whileHover={{ scale: 1.02 }}
-                                className="bg-gray-900 p-4 rounded-lg border border-gray-700 shadow-md mt-4"
-                            >
-                                <h3 className="text-lg font-bold mb-2 text-blue-400">📜 Full AI Response</h3>
-                                <pre className="text-sm whitespace-pre-wrap text-gray-300">
-                  {prediction.fullText}
-                </pre>
-                            </motion.div>
-                        </>
-                    )}
-                </>
-            )}
-        </motion.div>
-    );
-};
