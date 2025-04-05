@@ -154,7 +154,7 @@ const PredictionBlock = ({ prediction }: PredictionBlockProps) => {
                             { title: '📅 Fixture Details', data: prediction.fixtureDetails },
                             { title: '📊 Recent Form', data: prediction.recentForm },
                             { title: '🔄 Head-to-Head Record', data: prediction.headToHead },
-                            { title: '🚑 Injury Updates', data: prediction.injuryUpdates },
+                            { title: '🚑 Injury & Squad Updates', data: prediction.injuryUpdates },
                             { title: '🌍 Home/Away Impact', data: prediction.homeAwayImpact },
                             { title: '🔥 Tactical Insights', data: prediction.tacticalInsights },
                             { title: '💰 Betting Market Movement', data: prediction.bettingMarketMovement },
