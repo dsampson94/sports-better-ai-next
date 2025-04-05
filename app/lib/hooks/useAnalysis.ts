@@ -148,7 +148,7 @@ export function useAnalysis() {
                 winProbability: extractBetween(block, 'Win Probability', 'Best Bet'),
                 bestBet: extractBetween(block, 'Best Bet:', 'Fixture Details'),
                 fixtureDetails: extractBetween(block, 'Fixture Details:', 'Recent Form'),
-                recentForm: extractBetween(block, 'Recent Form:', 'Head-to-Head'),
+                recentForm: extractBetween(block, 'Recent Form:', 'Head-to-Head Record'),
                 headToHead: extractBetween(block, 'Head-to-Head Record:', 'Injury Updates'),
                 injuryUpdates: extractBetween(block, 'Injury & Squad Updates:', 'Home/Away Impact'),
                 homeAwayImpact: extractBetween(block, 'Home/Away Impact:', 'Tactical Insights'),
